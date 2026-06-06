@@ -81,7 +81,8 @@
                 dress: "https://ik.imagekit.io/atlantz/jam/c/aurora/aurora_dress.png",
             },
             councilor: {
-                neutral: "https://ik.imagekit.io/atlantz/jam/c/councilor/councilor_neutral.png",
+                neutral: "https://ik.imagekit.io/atlantz/jam/c/aurora/aurora_neutral.png",
+                // neutral: "https://ik.imagekit.io/atlantz/jam/c/councilor/councilor_neutral.png",
             },
             // Override / extend emotions here. Example:
             // aurora: { dreamy: "img/aurora_dreamy.png" },

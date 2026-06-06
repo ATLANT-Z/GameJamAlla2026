@@ -100,6 +100,7 @@
         try {
             window.dispatchEvent(new CustomEvent("dialog:line", { detail: {
                 speaker: line.speaker || "",
+                mood:    line.mood    || "",
                 html:    line.html    || "",
                 index:   currentIndex,
                 total:   currentLines.length,

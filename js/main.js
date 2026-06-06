@@ -104,13 +104,9 @@
         // Пропустить пустой результат — может быть промежуточная мутация.
         if (!payload.lines.length && !payload.choices.length) return;
 
-        // Шапки могли быть только что (пере)смонтированы — вернуть туда
-        // ГГ / NPC / фон / HP. Идемпотентно: если ничего не изменилось,
-        // эти функции ничего не делают.
-        // if (window.gg  && window.gg.rehome)  window.gg.rehome();
-        // if (window.npc && window.npc.rehome) window.npc.rehome();
-        // if (window.bg  && window.bg.rehome)  window.bg.rehome();
-        // if (window.hp  && window.hp.rehome)  window.hp.rehome();
+        // rehome больше не нужен: интерфейс теперь не пересоздаётся при
+        // смене пассажей, шапка всегда есть. Аврора показывается один раз
+        // при загрузке через gg.init().
 
         // Мини-игра занята экраном — придержим payload до её завершения.
         if (window.mini && window.mini.isRunning()) {
@@ -160,7 +156,11 @@
             }
             // Skip lines that are pure choices with no text
             if (line.html.trim() || line.speaker) {
-                lines.push({ speaker: line.speaker, html: line.html });
+                lines.push({
+                    speaker: line.speaker,
+                    mood:    line.mood || "",
+                    html:    line.html,
+                });
             }
         });
 
@@ -172,17 +172,27 @@
        Returns { speaker, html, choices[] }
        ------------------------------------------------------------ */
     function parseChunk(chunkHtml, sourceEl) {
-        // 1. Speaker prefix: "ИМЯ: ..." at the start. Strip leading <br>s
-        //    and whitespace first — Harlowe loves emitting them between replies.
+        // 1. Speaker prefix: "ИМЯ@mood: ..." или "ИМЯ: ..." at the start.
+        //    Strip leading <br>s and whitespace first — Harlowe loves emitting
+        //    them between replies.
+        //    [скобки] не используем — Twine ест их как хук-синтаксис.
         let cleaned = chunkHtml.replace(/^(?:\s|<br\s*\/?\s*>|&nbsp;)+/i, "");
         let speaker = "";
+        let mood = "";
         let body = cleaned;
-        const speakerMatch = cleaned.match(/^([А-ЯЁA-Z][А-ЯЁA-Z0-9\s\-]+?)\s*:\s*([\s\S]*)$/);
+        // Group 1: name (ALL-CAPS, latin or cyrillic, spaces/dashes allowed)
+        // Group 2: optional @mood — латиница нижнего регистра, как в реестре
+        // Group 3: rest of the body
+        const speakerMatch = cleaned.match(
+            /^([А-ЯЁA-Z][А-ЯЁA-Z0-9\s\-]+?)\s*(?:@([a-z_][a-z0-9_]*))?\s*:\s*([\s\S]*)$/
+        );
         if (speakerMatch) {
             const name = speakerMatch[1].trim();
-            // "МИР" = narration, no banner
+            mood = (speakerMatch[2] || "").trim();
+            // "МИР" = narration, no banner (но mood для нарратора всё равно
+            // игнорим — некому показывать).
             if (name !== "МИР" && name !== "WORLD") speaker = name;
-            body = speakerMatch[2];
+            body = speakerMatch[3];
         }
 
         // 2. Build a DOM subtree to work with for link extraction
@@ -229,7 +239,7 @@
         // 6. Strip <tw-open-button> (debug widgets)
         subtree.querySelectorAll("tw-open-button").forEach((e) => e.remove());
 
-        return { speaker, html: subtree.innerHTML, choices };
+        return { speaker, mood, html: subtree.innerHTML, choices };
     }
 
     function replaceInlineLinks(subtree, sourceEl) {

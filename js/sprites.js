@@ -79,6 +79,7 @@
         let currentId = null;
         let currentEl = null;
         let lastMood = null;   // remembered so we can re-mount after passage change
+        let forceHidden = false;  // sticky hide: реплики не возвращают её
 
         // Always re-query: passage swaps replace [data-gg-slot] with a new
         // element, and the old reference becomes orphaned.
@@ -89,12 +90,21 @@
         function emj(suffix) {
             const root = ensureSlot();
             if (!root) return;
+            forceHidden = false;  // явный вызов всегда сбрасывает sticky hide
             lastMood = suffix;
             if (currentEl && currentEl.parentNode !== root) currentEl = null;
             // Используем protagonistKey (ключ реестра), а не protagonist (имя для UI).
             const cfg = (window.Game && window.Game.config) || {};
             const family = cfg.protagonistKey || cfg.protagonist || "aurora";
             const fullId = resolveFullId(family, suffix);
+
+            // Ничего не делаем, если та же эмоция уже на экране и видна —
+            // иначе на каждой реплике АВРОРЫ был бы лишний re-enter.
+            if (currentEl &&
+                currentId === fullId &&
+                currentEl.classList.contains("is-active")) {
+                return;
+            }
 
             const entry = window.sprites.get(fullId);
             if (!entry) {
@@ -121,13 +131,28 @@
             currentEl = next;
         }
 
-        function show() { if (currentEl) currentEl.classList.add("is-active"); }
-        function hide() { if (currentEl) currentEl.classList.remove("is-active"); }
+        function show() {
+            forceHidden = false;
+            if (currentEl) currentEl.classList.add("is-active");
+        }
+        /**
+         * Скрыть ГГ.
+         *   gg.hide()             — мягко: следующая реплика АВРОРЫ её вернёт.
+         *   gg.hide({force: true}) — sticky: реплики не возвращают, нужен
+         *                            явный gg.show() / gg.emj() / gg.clear().
+         */
+        function hide(opts) {
+            if (currentEl) currentEl.classList.remove("is-active");
+            if (opts && opts.force) forceHidden = true;
+        }
 
         function clear() {
+            forceHidden = false;
             if (currentEl) { currentEl.remove(); currentEl = null; }
             currentId = null;
         }
+
+        function isForceHidden() { return forceHidden; }
 
         // Re-mount sprite into a freshly-rendered slot (after passage swap).
         // Если ничего ещё не показывали — поставить neutral по умолчанию.
@@ -144,6 +169,7 @@
             setEmj: emj,                 // legacy alias
             show, hide, clear,
             rehome,
+            isForceHidden,
             current: () => currentId,
         };
     })();
@@ -213,11 +239,14 @@
                     el.appendChild(makeInner(entry));
                     r.appendChild(el);
                     existing.el = el;
-                } else {
+                    existing.mood = mood;
+                } else if (existing.mood !== mood) {
+                    // Эмоция реально поменялась — пересоздаём содержимое.
                     existing.el.innerHTML = "";
                     existing.el.appendChild(makeInner(entry));
+                    existing.mood = mood;
                 }
-                existing.mood = mood;
+                // Та же эмоция — ничего не делаем, просто relayout ниже сделает speak.
             } else {
                 const el = document.createElement("div");
                 el.className = "npc is-entering";
@@ -281,10 +310,25 @@
             relayout();
         }
 
-        function clear() {
+        /**
+         * Убрать NPC со сцены.
+         *   clear()       — убирает всех + сбрасывает память эмоций для всех.
+         *   clear("knight") — убирает только knight + забывает его эмоцию.
+         */
+        function clear(key) {
+            if (key) {
+                hide(key);
+                if (window.speakers && window.speakers.forgetMood) {
+                    window.speakers.forgetMood(key);
+                }
+                return;
+            }
             stack.forEach((s) => s.el.remove());
             stack = [];
             activeKey = null;
+            if (window.speakers && window.speakers.forgetMood) {
+                window.speakers.forgetMood();
+            }
         }
 
         return {
@@ -307,8 +351,9 @@
     window.gg  = Object.assign(window.gg  || {}, gg, {
         init() {
             if (!document.querySelector("[data-gg-slot]")) {
-                console.warn("[gg.init] [data-gg-slot] не найден — слот появится с шапкой.");
+                console.warn("[gg.init] [data-gg-slot] не найден.");
             }
+            // ГГ не показываем — она появится, когда дойдёт её реплика.
             return { current: gg.current() };
         },
     });

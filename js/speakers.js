@@ -69,25 +69,71 @@
         return null;
     }
 
+    // Запоминаем последнюю заданную эмоцию для каждого героя
+    // (в т.ч. для ГГ — ключ "__gg"). Эмоция держится между репликами,
+    // пока её не переключат явно через ИМЯ[mood]:.
+    const lastMoodByKey = Object.create(null);
+    const GG_KEY = "__gg";
+
     function onDialogLine(ev) {
         if (!ev || !ev.detail) return;
         const speaker = ev.detail.speaker;
         if (!speaker) return;                      // нарратор — игнор
-        if (isProtagonist(speaker)) return;        // ГГ — слева, не в стек
+        const mood = (ev.detail.mood || "").trim();
+
+        // ГГ — отдельный путь: меняем её эмоцию через gg.emj,
+        // но в правый стек не пихаем.
+        if (isProtagonist(speaker)) {
+            // sticky hide: gg.hide({force:true}) — реплики не возвращают её.
+            if (window.gg && window.gg.isForceHidden && window.gg.isForceHidden()) return;
+            // Решаем какую эмоцию: явная → она и запоминается; иначе — последняя
+            // запомненная или neutral. Реплика АВРОРЫ всегда триггерит показ
+            // (даже без mood) — это и есть «реплика выше hide».
+            let useMood;
+            if (mood) {
+                lastMoodByKey[GG_KEY] = mood;
+                useMood = mood;
+            } else {
+                useMood = lastMoodByKey[GG_KEY] || "neutral";
+            }
+            if (window.gg && window.gg.emj) window.gg.emj(useMood);
+            return;
+        }
 
         const key = resolveNpcKey(speaker);
         if (!key) return;                          // не нашли — молча
 
-        // Проверяем что в реестре есть хоть что-то с этой family.
-        const moods = ["neutral", "sad", "happy", "angry", "scared"];
-        const hasAny = window.sprites &&
-            moods.some((m) => window.sprites.has(key + "_" + m));
-        if (!hasAny) return;
+        // Решаем какую эмоцию использовать:
+        //   • явная в реплике → берём её и запоминаем
+        //   • нет явной → используем запомненную для этого героя
+        //   • если запомненной нет → "neutral" (первое появление)
+        let useMood;
+        if (mood) {
+            lastMoodByKey[key] = mood;
+            useMood = mood;
+        } else {
+            useMood = lastMoodByKey[key] || "neutral";
+        }
 
+        // Проверяем что нужный спрайт вообще есть.
+        if (!window.sprites || !window.sprites.has(key + "_" + useMood)) {
+            // fallback: хотя бы neutral, чтобы не падать молча
+            if (window.sprites && window.sprites.has(key + "_neutral")) {
+                useMood = "neutral";
+            } else {
+                return;
+            }
+        }
         if (!window.npc) return;
 
-        window.npc.show(key, "neutral");           // появится если ещё нет
+        window.npc.show(key, useMood);             // появится или сменит эмоцию
         window.npc.speak(key);                     // подскочит как активный
+    }
+
+    // Очистить память эмоций — полезно при clear()
+    function forgetMood(key) {
+        if (key) delete lastMoodByKey[key];
+        else for (const k of Object.keys(lastMoodByKey)) delete lastMoodByKey[k];
     }
 
     let bound = false;
@@ -102,8 +148,10 @@
 
     // Public — на случай если автор хочет вручную подёргать ту же логику.
     window.speakers = Object.assign(window.speakers || {}, {
-        resolve: resolveNpcKey,
-        handle:  (speaker) => onDialogLine({ detail: { speaker } }),
+        resolve:    resolveNpcKey,
+        handle:     (speaker, mood) => onDialogLine({ detail: { speaker, mood } }),
+        forgetMood,
+        lastMood:   (key) => lastMoodByKey[key] || null,
         init,
     });
 })();
