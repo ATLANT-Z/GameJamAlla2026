@@ -12,33 +12,35 @@
 (function () {
     "use strict";
 
-    const STATE = { value: 100, max: 100, listeners: [] };
+    const STATE = { value: 100, max: 100, hidden: false, listeners: [] };
 
-    let stateBox = null;   // .state container (hides whole row)
-    let fillEl   = null;
-
-    function init() {
-        stateBox = document.querySelector("[data-state]");
-        fillEl   = document.querySelector("[data-hp-fill]");
-        render();
-    }
+    function stateBox() { return document.querySelector("[data-state]"); }
+    function fillEl()   { return document.querySelector("[data-hp-fill]"); }
 
     function clamp(v) { return Math.max(0, Math.min(STATE.max, v)); }
 
     function render() {
-        if (!fillEl) return;
+        const fill = fillEl();
+        const box = stateBox();
+        if (box) box.classList.toggle("state--hidden", STATE.hidden);
+
+        if (fill) {
+            const pct = (STATE.value / STATE.max) * 100;
+            fill.style.width = pct + "%";
+            if      (pct <= 15) fill.dataset.mood = "critical";
+            else if (pct <= 40) fill.dataset.mood = "low";
+            else                delete fill.dataset.mood;
+        }
+
         const pct = (STATE.value / STATE.max) * 100;
-        fillEl.style.width = pct + "%";
-
-        if      (pct <= 15) fillEl.dataset.mood = "critical";
-        else if (pct <= 40) fillEl.dataset.mood = "low";
-        else                delete fillEl.dataset.mood;
-
         document.documentElement.style.setProperty(
             "--gg-opacity",
             (0.35 + (pct / 100) * 0.65).toFixed(3)
         );
     }
+
+    // Called from main.js after a passage:ready when [data-state] reappears.
+    function rehome() { render(); }
 
     function set(v) {
         const prev = STATE.value;
@@ -54,13 +56,12 @@
         render();
     }
 
-    function show() { stateBox && stateBox.classList.remove("state--hidden"); }
-    function hide() { stateBox && stateBox.classList.add("state--hidden"); }
+    function show() { STATE.hidden = false; render(); }
+    function hide() { STATE.hidden = true;  render(); }
     function toggle(v) {
-        if (!stateBox) return;
-        if (v === undefined) stateBox.classList.toggle("state--hidden");
-        else if (v) show();
-        else hide();
+        if (v === undefined) STATE.hidden = !STATE.hidden;
+        else STATE.hidden = !v;
+        render();
     }
 
     function onZero(fn) { if (typeof fn === "function") STATE.listeners.push(fn); }
@@ -68,10 +69,9 @@
         STATE.listeners.slice().forEach((fn) => { try { fn(); } catch (e) { console.error(e); } });
     }
 
-    document.addEventListener("DOMContentLoaded", init);
-
     window.hp = Object.assign(window.hp || {}, {
         set, add, remove, reset, show, hide, toggle, onZero,
+        rehome,
         value: () => STATE.value,
         max:   () => STATE.max,
     });

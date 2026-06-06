@@ -16,13 +16,6 @@
 (function () {
     "use strict";
 
-    let elFooter   = null;
-    let elDialog   = null;
-    let elText     = null;
-    let elSpeaker  = null;
-    let elHint     = null;
-    let elChoices  = null;
-
     let typing = false;
     let skipRequested = false;
     let renderToken = 0;
@@ -33,20 +26,26 @@
     let currentChoices = [];
     let awaitingClick = false;
 
-    function init() {
-        elFooter  = document.querySelector("[data-footer]");
-        elDialog  = document.querySelector("[data-dialog]");
-        elText    = document.querySelector("[data-dialog-text]");
-        elSpeaker = document.querySelector("[data-dialog-speaker]");
-        elHint    = document.querySelector("[data-dialog-hint]");
-        elChoices = document.querySelector("[data-choices]");
+    // Always-fresh lookups — DOM may be remounted between passages.
+    const $ = (sel) => document.querySelector(sel);
+    const refs = () => ({
+        footer:  $("[data-footer]"),
+        dialog:  $("[data-dialog]"),
+        text:    $("[data-dialog-text]"),
+        speaker: $("[data-dialog-speaker]"),
+        hint:    $("[data-dialog-hint]"),
+        choices: $("[data-choices]"),
+    });
 
-        if (elDialog) {
-            elDialog.addEventListener("click", onDialogClick);
-        }
+    function init() {
+        // Global delegation — works regardless of whether [data-dialog]
+        // exists at boot, and survives passage remounts.
+        document.addEventListener("click", onDialogClick);
     }
 
     function onDialogClick(ev) {
+        const dlg = ev.target.closest && ev.target.closest("[data-dialog]");
+        if (!dlg) return;
         // Don't intercept clicks on choices or inline links — they have own handlers
         if (ev.target.closest(".choice")) return;
         if (ev.target.closest(".inline-link")) return;
@@ -99,29 +98,28 @@
         const line = currentLines[currentIndex];
         if (!line) return;
 
-        if (elSpeaker) elSpeaker.textContent = line.speaker || "";
-        if (elHint)    elHint.classList.remove("is-visible");
+        const { speaker, hint, text } = refs();
+        if (speaker) speaker.textContent = line.speaker || "";
+        if (hint)    hint.classList.remove("is-visible");
 
         await typewrite(line.html || "", token);
         if (token !== renderToken) return;
 
         const isLast = currentIndex >= currentLines.length - 1;
+        const r = refs();
 
         if (isLast) {
             if (currentChoices && currentChoices.length) {
                 renderChoices(currentChoices);
             }
-            // Inline link inside the last line: if present, no hint
-            const hasInline = elText && elText.querySelector(".inline-link");
+            const hasInline = r.text && r.text.querySelector(".inline-link");
             const hasChoices = currentChoices && currentChoices.length;
-            if (elHint && !hasChoices && !hasInline) {
-                elHint.classList.add("is-visible");
-                awaitingClick = false;
-            } else {
-                awaitingClick = false;
+            if (r.hint && !hasChoices && !hasInline) {
+                r.hint.classList.add("is-visible");
             }
+            awaitingClick = false;
         } else {
-            if (elHint) elHint.classList.add("is-visible");
+            if (r.hint) r.hint.classList.add("is-visible");
             awaitingClick = true;
         }
     }
@@ -139,20 +137,22 @@
     function leave() {
         return new Promise((resolve) => {
             const outMs = Game.config.passageOutMs || 220;
+            const { choices, text } = refs();
 
-            if (elChoices) {
-                elChoices.querySelectorAll(".choice").forEach((b) => {
+            if (choices) {
+                choices.querySelectorAll(".choice").forEach((b) => {
                     b.style.animation = "none";
                     b.classList.add("is-leaving");
                 });
             }
-            if (elText) elText.classList.add("is-leaving");
+            if (text) text.classList.add("is-leaving");
 
             setTimeout(() => {
-                if (elChoices) elChoices.innerHTML = "";
-                if (elText) {
-                    elText.classList.remove("is-leaving");
-                    elText.innerHTML = "";
+                const r = refs();
+                if (r.choices) r.choices.innerHTML = "";
+                if (r.text) {
+                    r.text.classList.remove("is-leaving");
+                    r.text.innerHTML = "";
                 }
                 resolve();
             }, outMs);
@@ -164,6 +164,7 @@
        ============================================================ */
     function typewrite(html, token) {
         return new Promise((resolve) => {
+            const elText = refs().text;
             if (!elText) { resolve(); return; }
             typing = true;
             skipRequested = false;
@@ -250,6 +251,7 @@
        CHOICES
        ============================================================ */
     function renderChoices(choices) {
+        const elChoices = refs().choices;
         if (!elChoices) return;
         elChoices.innerHTML = "";
         choices.forEach((c, idx) => {

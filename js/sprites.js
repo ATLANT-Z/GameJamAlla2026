@@ -76,18 +76,21 @@
        GG (left side)
        ============================================================ */
     const gg = (function () {
-        let slot = null;
         let currentId = null;
         let currentEl = null;
+        let lastMood = null;   // remembered so we can re-mount after passage change
 
+        // Always re-query: passage swaps replace [data-gg-slot] with a new
+        // element, and the old reference becomes orphaned.
         function ensureSlot() {
-            if (!slot) slot = document.querySelector("[data-gg-slot]");
-            return slot;
+            return document.querySelector("[data-gg-slot]");
         }
 
         function emj(suffix) {
             const root = ensureSlot();
             if (!root) return;
+            lastMood = suffix;
+            if (currentEl && currentEl.parentNode !== root) currentEl = null;
             const family = (window.Game && window.Game.config.protagonist) || "aurora";
             const fullId = resolveFullId(family, suffix);
 
@@ -124,10 +127,24 @@
             currentId = null;
         }
 
+        // Re-mount sprite into a freshly-rendered slot (after passage swap).
+        function rehome() {
+            const slot = ensureSlot();
+            if (!slot) return;
+            // already in current slot — nothing to do
+            if (currentEl && currentEl.parentNode === slot) return;
+            // slot reappeared but we lost our DOM element — re-mount last mood
+            if (lastMood) {
+                currentEl = null;
+                emj(lastMood);
+            }
+        }
+
         return {
             emj,
             setEmj: emj,                 // legacy alias
             show, hide, clear,
+            rehome,
             current: () => currentId,
         };
     })();
@@ -136,13 +153,14 @@
        NPC stack (right side fan)
        ============================================================ */
     const npc = (function () {
-        let stack = [];
+        // Stack entries are kept ALIVE across passage swaps so we can re-mount
+        // them into a freshly-rendered [data-npc-stack].
+        let stack = [];     // [{ key, mood, el }]
         let activeKey = null;
-        let root = null;
 
         function ensureRoot() {
-            if (!root) root = document.querySelector("[data-npc-stack]");
-            return root;
+            // Always re-query — passage swaps replace the host element.
+            return document.querySelector("[data-npc-stack]");
         }
 
         const PARALLAX_BY_STACK = [36, 22, 14, 8];
@@ -187,8 +205,19 @@
 
             let existing = stack.find((s) => s.key === key);
             if (existing) {
-                existing.el.innerHTML = "";
-                existing.el.appendChild(makeInner(entry));
+                // If our cached element is detached (passage swap), rebuild it
+                // inside the freshly-rendered stack host.
+                if (!existing.el || !existing.el.isConnected || existing.el.parentNode !== r) {
+                    const el = document.createElement("div");
+                    el.className = "npc";
+                    el.dataset.npcKey = key;
+                    el.appendChild(makeInner(entry));
+                    r.appendChild(el);
+                    existing.el = el;
+                } else {
+                    existing.el.innerHTML = "";
+                    existing.el.appendChild(makeInner(entry));
+                }
                 existing.mood = mood;
             } else {
                 const el = document.createElement("div");
@@ -202,6 +231,25 @@
 
             // First-shown character becomes the speaker by default
             if (!activeKey) activeKey = key;
+            relayout();
+        }
+
+        // Re-mount whole stack into a fresh host after passage swap.
+        function rehome() {
+            const r = ensureRoot();
+            if (!r) return;
+            stack.forEach((s) => {
+                if (!s.el || !s.el.isConnected || s.el.parentNode !== r) {
+                    const entry = window.sprites.get(resolveFullId(s.key, s.mood || "neutral"));
+                    if (!entry) return;
+                    const el = document.createElement("div");
+                    el.className = "npc";
+                    el.dataset.npcKey = s.key;
+                    el.appendChild(makeInner(entry));
+                    r.appendChild(el);
+                    s.el = el;
+                }
+            });
             relayout();
         }
 
@@ -241,7 +289,7 @@
         }
 
         return {
-            show, emj, speak, hide, clear,
+            show, emj, speak, hide, clear, rehome,
             // legacy alias for setEmj({ key, speaker })
             setEmj(fullId, opts) {
                 opts = opts || {};

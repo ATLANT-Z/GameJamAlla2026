@@ -38,18 +38,12 @@
         dy: 0,
     };
 
-    let root = null,
-        barsEl = null,
-        cardEl = null,
-        artEl = null,
-        textEl = null,
-        leftEl = null,
-        rightEl = null,
-        reactionEl = null;
+    // No cached DOM. We re-resolve every time the mini-game starts (and the
+    // card listeners get re-bound to whatever [data-mini-card] is live now).
+    let root, barsEl, cardEl, artEl, textEl, leftEl, rightEl, reactionEl;
+    let boundCardEl = null;   // the cardEl we currently have drag listeners on
 
-    let listenersBound = false;
-
-    function init() {
+    function resolveRefs() {
         root       = document.querySelector("[data-mini]");
         barsEl     = document.querySelector("[data-mini-bars]");
         cardEl     = document.querySelector("[data-mini-card]");
@@ -58,8 +52,6 @@
         leftEl     = document.querySelector('[data-mini-side="left"]');
         rightEl    = document.querySelector('[data-mini-side="right"]');
         reactionEl = document.querySelector("[data-mini-reaction]");
-
-        bindCardListeners();
     }
 
     /* ============================================================
@@ -101,6 +93,8 @@
         STATE.deck = cardsCopy.slice();
 
         STATE.running = true;
+        resolveRefs();
+        bindCardListeners();    // re-bind drag to the current cardEl
         renderBars();
         if (root) root.classList.remove("mini--hidden");
         if (reactionEl) reactionEl.classList.remove("is-visible");
@@ -279,9 +273,14 @@
        Side hints: swiping RIGHT → show LEFT hint (so the card
        doesn't cover the text), and vice-versa.
        ============================================================ */
+    // Stored window-level listeners — bound once on first start.
+    let windowDragBound = false;
+
     function bindCardListeners() {
-        if (listenersBound || !cardEl) return;
-        listenersBound = true;
+        if (!cardEl) return;
+        // Already bound to THIS exact element? skip.
+        if (boundCardEl === cardEl) return;
+        boundCardEl = cardEl;
 
         cardEl.addEventListener("mousemove", (ev) => {
             if (STATE.dragging) return;
@@ -361,11 +360,16 @@
                 STATE.currentSide = null;
             }
         };
-        window.addEventListener("mousemove", onMove, { passive: false });
-        window.addEventListener("touchmove", onMove, { passive: false });
-        window.addEventListener("mouseup",   onUp);
-        window.addEventListener("touchend",  onUp);
-        window.addEventListener("touchcancel", onUp);
+        // Window-level move/up — must bind only ONCE no matter how many
+        // times the card element gets remounted across passages.
+        if (!windowDragBound) {
+            windowDragBound = true;
+            window.addEventListener("mousemove", onMove, { passive: false });
+            window.addEventListener("touchmove", onMove, { passive: false });
+            window.addEventListener("mouseup",   onUp);
+            window.addEventListener("touchend",  onUp);
+            window.addEventListener("touchcancel", onUp);
+        }
     }
 
     function commitSwipe(card, side) {
@@ -423,8 +427,6 @@
             { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]
         ));
     }
-
-    document.addEventListener("DOMContentLoaded", init);
 
     window.mini = Object.assign(window.mini || {}, {
         register,

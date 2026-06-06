@@ -2,19 +2,21 @@
    background.js — bg.set(id)
    Crossfades the two layers (far + near) using opacity.
    The actual <img> URLs come from registry.js / bg.register().
+
+   DOM-aware: passages can mount/unmount [data-bg-far|near]
+   (e.g. menu passage has no headers). We:
+     • re-query every set()
+     • remember current id and re-apply when layers reappear
+       (called from main.js on passage:ready).
    ============================================================ */
 
 (function () {
     "use strict";
 
-    let elFar  = null;
-    let elNear = null;
     let currentId = null;
 
-    function init() {
-        elFar  = document.querySelector("[data-bg-far]");
-        elNear = document.querySelector("[data-bg-near]");
-    }
+    function farEl()  { return document.querySelector("[data-bg-far]"); }
+    function nearEl() { return document.querySelector("[data-bg-near]"); }
 
     function applyLayer(el, url) {
         if (!el) return;
@@ -22,14 +24,18 @@
             el.style.backgroundImage = "";
             return;
         }
-        // Crossfade trick: snap fade-out, swap, snap fade-in
         el.classList.add("is-fading-out");
         setTimeout(() => {
             el.style.backgroundImage = `url("${url}")`;
-            // force reflow then fade in
             void el.offsetWidth;
             el.classList.remove("is-fading-out");
         }, 280);
+    }
+
+    function paint(entry) {
+        if (!entry) return;
+        applyLayer(farEl(),  entry.far  || null);
+        applyLayer(nearEl(), entry.near || null);
     }
 
     /**
@@ -38,29 +44,34 @@
      */
     function set(id) {
         if (!id) return;
-        if (currentId === id) return;
         const entry = window.bg.get(id);
         if (!entry) {
             console.warn("[bg] unknown id:", id);
             return;
         }
         currentId = id;
-        applyLayer(elFar,  entry.far  || null);
-        applyLayer(elNear, entry.near || null);
+        paint(entry);
     }
 
     function clear() {
         currentId = null;
-        if (elFar)  elFar.style.backgroundImage  = "";
-        if (elNear) elNear.style.backgroundImage = "";
+        const f = farEl(), n = nearEl();
+        if (f) f.style.backgroundImage = "";
+        if (n) n.style.backgroundImage = "";
     }
 
-    document.addEventListener("DOMContentLoaded", init);
+    // Re-apply current bg when the layers reappear after a header-less passage.
+    function rehome() {
+        if (!currentId) return;
+        const entry = window.bg.get(currentId);
+        if (entry) paint(entry);
+    }
 
     // Merge with the registry-exposed object (registry created window.bg first)
     window.bg = Object.assign(window.bg || {}, {
         set:     set,
         current: () => currentId,
         clear:   clear,
+        rehome:  rehome,
     });
 })();

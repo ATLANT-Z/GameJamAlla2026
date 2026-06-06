@@ -45,19 +45,28 @@
         const story = document.querySelector("tw-story");
         if (!story) { requestAnimationFrame(attachStoryWatcher); return; }
         storyObserver && storyObserver.disconnect();
-        storyObserver = new MutationObserver(() => {
+        storyObserver = new MutationObserver((muts) => {
             const sel = (window.Game && window.Game.config.passageSelector) || "tw-passage";
             const live = document.querySelector(sel);
+            // Tags-attribute change on tw-story → force a re-sync even if
+            // the passage HTML happens to be byte-identical.
+            const tagsChanged = muts.some((m) => m.type === "attributes" && m.attributeName === "tags");
+            if (tagsChanged) lastContent = "\0";
             if (live && live !== twEl) {
                 twEl = live;
                 lastContent = "";
                 observer && observer.disconnect();
                 observer = new MutationObserver(() => syncFromPassage());
                 observer.observe(twEl, { childList: true, subtree: true, characterData: true });
-                syncFromPassage();
             }
+            syncFromPassage();
         });
-        storyObserver.observe(story, { childList: true });
+        // Watch both childList (passage swaps) AND attributes (tags="hide_header")
+        storyObserver.observe(story, {
+            childList: true,
+            attributes: true,
+            attributeFilter: ["tags"],
+        });
     }
 
     function attachWatcher() {
@@ -96,12 +105,52 @@
         return wrap.innerHTML;
     }
 
+    function hasHeader() {
+        // Headers are the [data-footer] (dialog), [data-mini] (cards),
+        // [data-cast] (sprites), etc. If footer is absent we treat the
+        // passage as "menu/no-header" — Twine renders its raw text directly.
+        return !!document.querySelector("[data-footer]");
+    }
+
+    // Twine puts the CURRENT passage's tags onto <tw-story tags="…">.
+    // So "hide_header" lives there, not on <tw-passage>.
+    function isHiddenHeaderPassage() {
+        const story = document.querySelector("tw-story");
+        if (!story) return false;
+        const tags = (story.getAttribute("tags") || "").split(/\s+/);
+        return tags.indexOf("hide_header") !== -1;
+    }
+
+    function announcePassageReady(menu) {
+        document.body.classList.toggle("no-header", !!menu);
+        try {
+            window.dispatchEvent(new CustomEvent("passage:ready", { detail: { menu } }));
+        } catch (e) {}
+        // Push remembered state back into freshly-mounted hosts.
+        if (!menu) {
+            if (window.bg  && window.bg.rehome)  window.bg.rehome();
+            if (window.hp  && window.hp.rehome)  window.hp.rehome();
+            if (window.gg  && window.gg.rehome)  window.gg.rehome();
+            if (window.npc && window.npc.rehome) window.npc.rehome();
+        }
+    }
+
     function syncFromPassage() {
         if (!twEl) return;
         const raw = extractStoryHtml(twEl);
         if (raw === lastContent) return;
         lastContent = raw;
 
+        const menu = isHiddenHeaderPassage() || !hasHeader();
+
+        // Menu / hide_header — let Twine render its own text/links inside
+        // <tw-passage> directly. We just announce the state and bail.
+        if (menu) {
+            announcePassageReady(true);
+            return;
+        }
+
+        announcePassageReady(false);
         const payload = parsePassage(raw, twEl);
 
         // If a mini-game was just started by THIS passage's <tw-collapsed>
