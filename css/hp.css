@@ -23,12 +23,12 @@
 
 .hp__label {
     position: absolute;
-    top: -11px;
+    top: -16px;
     left: 50%;
     transform: translateX(-50%);
     font-family: var(--font-display);
     font-weight: 700;
-    font-size: 9px;
+    font-size: 10px;
     letter-spacing: .34em;
     text-transform: uppercase;
     color: var(--c-gold-0);
@@ -36,7 +36,7 @@
     background: linear-gradient(180deg, rgba(20, 28, 64, .95), rgba(10, 18, 48, .95));
     border: 1px solid var(--line-gold);
     border-radius: 2px;
-    padding: 2px 9px;
+    padding: 4px 9px;
     box-shadow: 0 3px 8px rgba(0, 0, 0, .55), var(--glow-gold);
     text-shadow: 0 0 6px rgba(255, 242, 193, .4);
 }

@@ -101,6 +101,10 @@ img { user-select: none; -webkit-user-drag: none; }
 tw-story  { position: static; }
 
 /* --- Normal mode: hide loose story text/links --- */
+tw-story {
+    line-height: 1 !important;
+}
+
 tw-story:not([tags="hide_header"]) section {
     display: block;
     color: transparent;
