@@ -32,13 +32,13 @@
     letter-spacing: .34em;
     text-transform: uppercase;
     color: var(--c-gold-0);
+
     background: linear-gradient(180deg, rgba(20, 28, 64, .95), rgba(10, 18, 48, .95));
     border: 1px solid var(--line-gold);
     border-radius: 2px;
     padding: 2px 9px;
     box-shadow: 0 3px 8px rgba(0, 0, 0, .55), var(--glow-gold);
     text-shadow: 0 0 6px rgba(255, 242, 193, .4);
-    white-space: nowrap;
 }
 
 .hp__track {

@@ -79,10 +79,10 @@ html, body {
     color: var(--c-text);
     font-family: var(--font-body);
     font-size: 19px;
-    line-height: 1.5;
     user-select: none;
     -webkit-font-smoothing: antialiased;
     cursor: default;
+    line-height: 1 !important;
 }
 
 img { user-select: none; -webkit-user-drag: none; }

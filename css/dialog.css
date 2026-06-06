@@ -118,16 +118,16 @@
     /*Не убирать!*/
     z-index: 2;
     /*Не убирать!*/
-    top: -16px;
     left: 50%;
-    transform: translateX(-50%);
+    bottom: 100%;
+    transform: translate(-50%, 30%);
     font-family: var(--font-display);
     font-weight: 700;
     font-size: 12px;
     letter-spacing: .3em;
     text-transform: uppercase;
     color: var(--c-gold-0);
-    padding: 5px 18px;
+    padding: 8px 16px;
     background: linear-gradient(180deg, rgba(20, 28, 64, .95), rgba(10, 18, 48, .95));
     border: 1px solid var(--line-gold);
     border-radius: 3px;
@@ -145,7 +145,7 @@
 .dialog__speaker::after {
     content: '';
     position: absolute;
-    top: 50%;
+    top: 70%;
     width: 18px;
     height: 1px;
     background: linear-gradient(90deg, transparent, var(--c-gold-1) 60%, transparent);
