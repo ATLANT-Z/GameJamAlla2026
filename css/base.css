@@ -101,55 +101,23 @@ img { user-select: none; -webkit-user-drag: none; }
 tw-story  { position: static; }
 
 /* --- Normal mode: hide loose story text/links --- */
-tw-story:not([tags="hide_header"]) tw-passage {
+tw-story:not([tags="hide_header"]) section {
     display: block;
-    color: transparent;          /* hide loose text nodes */
-    user-select: none;
-    pointer-events: none;
+    color: transparent;
 }
+
 /* Re-show content inside our header blocks */
-tw-story:not([tags="hide_header"]) tw-passage > tw-sidebar,
-tw-story:not([tags="hide_header"]) tw-passage > tw-include,
-tw-story:not([tags="hide_header"]) tw-passage > tw-collapsed,
-tw-story:not([tags="hide_header"]) tw-passage tw-include * {
-    color: var(--c-text);
-    pointer-events: auto;
-}
 /* Kill loose <br> / consecutive-br between replies */
 tw-story:not([tags="hide_header"]) tw-passage > br,
 tw-story:not([tags="hide_header"]) tw-passage > tw-consecutive-br {
     display: none;
 }
+
 /* tw-link and tw-expression in the story tail are clickable via JS
    (.click() still works) but must not paint visually */
 tw-story:not([tags="hide_header"]) tw-passage > tw-link,
 tw-story:not([tags="hide_header"]) tw-passage > tw-expression {
     display: none;
-}
-
-/* ---------- Starfield ---------- */
-.starfield {
-    position: fixed;
-    inset: 0;
-    pointer-events: none;
-    z-index: 1;
-    background:
-        radial-gradient(1.2px 1.2px at 12% 18%, rgba(255,255,255,.85), transparent 60%),
-        radial-gradient(1px   1px   at 35% 70%, rgba(255,255,255,.55), transparent 60%),
-        radial-gradient(1.6px 1.6px at 60% 35%, rgba(207,226,255,.85), transparent 60%),
-        radial-gradient(1px   1px   at 78% 80%, rgba(255,255,255,.55), transparent 60%),
-        radial-gradient(1.3px 1.3px at 88% 22%, rgba(240,213,116,.6),  transparent 60%),
-        radial-gradient(1px   1px   at 20% 50%, rgba(207,226,255,.45), transparent 60%),
-        radial-gradient(1.3px 1.3px at 50% 90%, rgba(255,255,255,.55), transparent 60%),
-        radial-gradient(1.6px 1.6px at 8%  62%, rgba(184,162,255,.45), transparent 60%),
-        radial-gradient(1px   1px   at 92% 50%, rgba(207,226,255,.5),  transparent 60%);
-    background-repeat: no-repeat;
-    animation: starfield-twinkle 5s var(--ease-soft) infinite alternate;
-}
-
-@keyframes starfield-twinkle {
-    from { opacity: .5; }
-    to   { opacity: .95; }
 }
 
 /* ---------- Shared keyframes ---------- */
