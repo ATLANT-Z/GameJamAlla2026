@@ -1,9 +1,5 @@
 /* ============================================================
    mini.css — Reigns-style card game
-   Layout (when .mini is visible):
-        top    → .mini__bars     (4 stats with icons + tiny bars + arrows)
-        center → .mini__stage    (sides + card)
-        bottom → .mini__reaction (transient quote from Aurora)
    ============================================================ */
 
 .mini {
@@ -127,39 +123,69 @@
     position: relative;
     flex: 1;
     display: grid;
+    grid-auto-flow: column;
     place-items: center;
     perspective: 1200px;
 }
 
-/* Side hints — show up when card is dragged */
+/* ============================================================
+   SIDE HINTS — float-y, no rectangular plates.
+   Logic (from JS): swiping RIGHT shows the LEFT hint, and v.v.,
+   so the card never covers the text.
+   ============================================================ */
 .mini__side {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 28%;
-    max-width: 280px;
+    position: relative;
+    max-width: 260px;
     padding: 22px 24px;
     font-family: var(--font-heading);
-    font-size: 17px;
-    letter-spacing: .08em;
-    color: var(--c-text);
-    text-shadow: 0 0 12px rgba(207, 226, 255, .45);
+    font-size: clamp(20px, 2.2vw, 28px);
+    line-height: 1.25;
+    letter-spacing: .04em;
+    color: var(--c-gold-0);
+    text-shadow:
+        0 0 10px rgba(255, 242, 193, .85),
+        0 0 22px rgba(255, 242, 193, .45),
+        0 0 36px rgba(184, 162, 255, .35),
+        0 3px 0 rgba(0, 0, 0, .6),
+        0 6px 14px rgba(0, 0, 0, .55);
     opacity: 0;
     pointer-events: none;
-    transition: opacity 220ms var(--ease-soft), transform 320ms var(--ease-soft);
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    transition:
+        opacity 240ms var(--ease-soft),
+        transform 380ms var(--ease-spring);
+    transform: translateY(-50%);
+    z-index: 5;
 }
-.mini__side--left  { left: 4%;  text-align: right;
-    background: linear-gradient(90deg, rgba(8, 12, 36, .75), transparent);
-    border-right: 1px solid var(--line-gold);
-    box-shadow: -6px 0 30px rgba(110, 168, 255, .15) inset; }
-.mini__side--right { right: 4%; text-align: left;
-    background: linear-gradient(270deg, rgba(8, 12, 36, .75), transparent);
-    border-left: 1px solid var(--line-gold);
-    box-shadow: 6px 0 30px rgba(110, 168, 255, .15) inset; }
 
-.mini__side.is-active { opacity: 1; }
-.mini__side.is-active.mini__side--left  { transform: translate(-10px, -50%); }
-.mini__side.is-active.mini__side--right { transform: translate( 10px, -50%); }
+/* Aura puddle behind the text via ::before */
+.mini__side::before {
+    content: '';
+    position: absolute;
+    inset: -10% -8%;
+    z-index: -1;
+    background:
+        radial-gradient(60% 80% at 50% 50%,
+            rgba(255, 242, 193, .22) 0%,
+            rgba(184, 162, 255, .12) 35%,
+            transparent 70%);
+    filter: blur(18px);
+    opacity: 0;
+    transition: opacity 320ms var(--ease-soft);
+    pointer-events: none;
+}
+
+.mini__side--left  { margin-left: auto; text-align: right;  transform: translateY(-50%) translateX(-12px); }
+.mini__side--right { margin-right: auto; text-align: left; transform: translateY(-50%) translateX( 12px); }
+
+.mini__side.is-active {
+    opacity: 1;
+}
+.mini__side.is-active::before { opacity: 1; }
+.mini__side.is-active.mini__side--left  { transform: translateY(-50%) translateX(0); }
+.mini__side.is-active.mini__side--right { transform: translateY(-50%) translateX(0); }
 
 /* ============================================================
    CARD
@@ -185,11 +211,11 @@
     user-select: none;
     -webkit-user-drag: none;
     overflow: hidden;
+    z-index: 10;
 }
 .mini__card.is-dragging { cursor: grabbing; transition: none; }
 
 .mini__card::before {
-    /* corner filigree, very subtle */
     content: '';
     position: absolute;
     inset: 1px;
@@ -206,7 +232,6 @@
     padding: 1px;
 }
 
-/* Breathing glow */
 .mini__card-glow {
     position: absolute;
     inset: -24px;
@@ -220,7 +245,6 @@
     pointer-events: none;
 }
 
-/* Shimmering sweep across the card */
 .mini__card::after {
     content: '';
     position: absolute;
@@ -263,30 +287,77 @@
     text-shadow: 0 0 10px rgba(99, 140, 220, .25);
 }
 
-/* When card swiped past threshold */
 .mini__card.is-flying-left  { transform: translateX(-130%) rotate(-22deg) !important; opacity: 0; transition: transform 480ms var(--ease-soft), opacity 480ms var(--ease-soft); }
 .mini__card.is-flying-right { transform: translateX( 130%) rotate( 22deg) !important; opacity: 0; transition: transform 480ms var(--ease-soft), opacity 480ms var(--ease-soft); }
 .mini__card.is-entering     { transform: scale(.85) translateY(20px); opacity: 0; }
 
 /* ============================================================
-   REACTION — transient short quote from the protagonist
+   REACTION — Aurora's thought, styled like a small dialog card
    ============================================================ */
 .mini__reaction {
-    margin-top: 18px;
+    position: relative;
     align-self: center;
-    min-height: 2em;
-    max-width: 640px;
-    text-align: center;
-    font-family: var(--font-body);
-    font-style: italic;
-    font-size: 20px;
-    color: var(--c-text);
-    text-shadow: 0 0 12px rgba(184, 162, 255, .45);
+    margin-top: 22px;
+    min-height: 0;
+    max-width: 560px;
+    padding: 14px 26px 16px;
+    border: 1px solid var(--line-gold);
+    border-radius: 12px;
+    background:
+        radial-gradient(120% 100% at 50% -10%, rgba(184, 162, 255, .14), transparent 60%),
+        linear-gradient(180deg, rgba(18, 26, 64, .85), rgba(10, 18, 48, .92));
+    box-shadow:
+        var(--sheen-inner),
+        0 12px 26px rgba(0, 0, 0, .55),
+        var(--glow-moon),
+        var(--glow-arcane);
+    isolation: isolate;
     opacity: 0;
-    transition: opacity 320ms var(--ease-soft), transform 320ms var(--ease-soft);
-    transform: translateY(6px);
+    transform: translateY(14px) scale(.96);
+    transition:
+        opacity 320ms var(--ease-soft),
+        transform 380ms var(--ease-spring);
+    pointer-events: none;
 }
 .mini__reaction.is-visible {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
+}
+
+/* Soft breathing aura behind the bubble */
+.mini__reaction::before {
+    content: '';
+    position: absolute;
+    inset: -16px;
+    z-index: -1;
+    border-radius: 22px;
+    background:
+        radial-gradient(50% 60% at 50% 50%, rgba(110, 168, 255, .35), transparent 70%),
+        radial-gradient(70% 90% at 50% 100%, rgba(184, 162, 255, .25), transparent 70%);
+    filter: blur(18px);
+    animation: aura-breathe 5.2s var(--ease-soft) infinite;
+    pointer-events: none;
+}
+
+.thought__speaker {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 11px;
+    letter-spacing: .3em;
+    text-transform: uppercase;
+    color: var(--c-gold-0);
+    text-shadow: 0 0 8px rgba(255, 242, 193, .45);
+    margin-bottom: 4px;
+    text-align: center;
+}
+.thought__body {
+    font-family: var(--font-body);
+    font-style: italic;
+    font-size: 20px;
+    line-height: 1.35;
+    color: var(--c-text);
+    text-align: center;
+    text-shadow:
+        0 0 12px rgba(184, 162, 255, .45),
+        0 1px 0 rgba(0, 0, 0, .35);
 }

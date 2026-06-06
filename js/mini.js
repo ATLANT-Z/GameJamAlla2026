@@ -1,45 +1,36 @@
 /* ============================================================
    mini.js — Reigns-style card mini-game
 
-   Usage from a Twine passage:
+   API:
+       mini.register("tutorial1", { bars, cards, onComplete?, onBarZero? })
+       mini.start("tutorial1")           // ← lookup by id
+       mini.start({ bars, cards, ... })  // ← inline config
+       mini.stop()
+       mini.isRunning()
 
-     mini.config({
-         bars: [
-             { id: "hp",          icon: "❤", label: "связь",   value: 100 },
-             { id: "trust",       icon: "✦", label: "доверие", value: 60  },
-             { id: "companion",   icon: "✚", label: "друг",    value: 80  },
-             { id: "aggression",  icon: "✸", label: "духи",    value: 30  },
-         ],
-         cards: [
-             {
-                 id: "wolf_trap",
-                 art: "🐺",                  // emoji OR url
-                 text: "Дух волка попал в капкан…",
-                 left:  { label: "Освободить", delta: { hp:-15, trust:+10 }, reaction: "…" },
-                 right: { label: "Оставить",   delta: {           trust:-5 }, reaction: "…" },
-                 when:  (s) => s.hp >= 30,
-             },
-         ],
-         onComplete: () => { },
-         onBarZero:  (barId) => { },
-     });
+   Events (window):
+       "mini:start"     { detail: { id } }
+       "mini:complete"  { detail: { id, reason: "deck"|"barZero", barId? } }
 
-     mini.start();
-     mini.stop();
+   Side hint inversion:
+       Swiping the card RIGHT  → hint text appears on the LEFT  (so
+       the card doesn't cover it). Same for the reverse.
    ============================================================ */
 
 (function () {
     "use strict";
 
+    const REGISTRY = Object.create(null);
+
     const STATE = {
         running: false,
+        currentId: null,
         bars: [],
         deck: [],
         currentCard: null,
         currentSide: null,
         config: null,
 
-        // Drag bookkeeping
         dragging: false,
         startX: 0,
         startY: 0,
@@ -72,38 +63,71 @@
     }
 
     /* ============================================================
-       CONFIG / LIFECYCLE
+       LIFECYCLE
        ============================================================ */
-    function config(cfg) {
-        STATE.config = cfg;
-        STATE.bars = (cfg.bars || []).map((b) => ({
+    function register(id, cfg) {
+        if (!id) return;
+        REGISTRY[id] = cfg;
+    }
+
+    function start(idOrCfg) {
+        let cfg, id;
+        if (typeof idOrCfg === "string") {
+            id = idOrCfg;
+            cfg = REGISTRY[idOrCfg];
+            if (!cfg) {
+                console.warn("[mini.start] unknown id:", idOrCfg);
+                return;
+            }
+        } else if (idOrCfg && typeof idOrCfg === "object") {
+            cfg = idOrCfg;
+            id = idOrCfg.id || null;
+        } else {
+            console.warn("[mini.start] needs an id or config");
+            return;
+        }
+
+        // Deep copy cards/bars so we don't mutate the registered config
+        const cardsCopy = (cfg.cards || []).map((c) => Object.assign({}, c));
+        const barsCopy = (cfg.bars || []).map((b) => Object.assign({}, b));
+
+        STATE.config = Object.assign({}, cfg, { bars: barsCopy, cards: cardsCopy });
+        STATE.currentId = id;
+        STATE.bars = barsCopy.map((b) => ({
             id: b.id, icon: b.icon || "✦", label: b.label || b.id,
             value: clamp(b.value ?? 100, 0, 100),
             min: 0, max: 100,
         }));
-        STATE.deck = (cfg.cards || []).slice();
-    }
+        STATE.deck = cardsCopy.slice();
 
-    function start() {
-        if (!STATE.config) {
-            console.warn("[mini.start] no config. Call mini.config() first.");
-            return;
-        }
         STATE.running = true;
         renderBars();
         if (root) root.classList.remove("mini--hidden");
+        if (reactionEl) reactionEl.classList.remove("is-visible");
+
+        dispatchEvt("mini:start", { id });
         dealNext();
     }
 
-    function stop() {
+    function stop(reason, extra) {
+        if (!STATE.running) return;
+        const id = STATE.currentId;
         STATE.running = false;
-        if (root) root.classList.add("mini--hidden");
+        STATE.currentId = null;
         STATE.currentCard = null;
         STATE.currentSide = null;
         STATE.dragging = false;
+        if (root) root.classList.add("mini--hidden");
         clearBarHints();
         if (leftEl)  leftEl.classList.remove("is-active");
         if (rightEl) rightEl.classList.remove("is-active");
+
+        dispatchEvt("mini:complete", Object.assign({ id, reason: reason || "stop" }, extra || {}));
+    }
+
+    function dispatchEvt(name, detail) {
+        try { window.dispatchEvent(new CustomEvent(name, { detail })); }
+        catch (e) { console.error(e); }
     }
 
     /* ============================================================
@@ -193,9 +217,16 @@
         const card = pickNextCard();
         if (!card) {
             STATE.currentCard = null;
+            // Per-config callback first
             if (STATE.config && typeof STATE.config.onComplete === "function") {
-                STATE.config.onComplete();
+                try { STATE.config.onComplete(); } catch (e) { console.error(e); }
             }
+            // Then close the screen + global event
+            const id = STATE.currentId;
+            STATE.running = false;
+            STATE.currentId = null;
+            if (root) root.classList.add("mini--hidden");
+            dispatchEvt("mini:complete", { id, reason: "deck" });
             return;
         }
         STATE.currentCard = card;
@@ -203,23 +234,19 @@
     }
 
     /* ============================================================
-       CARD MOUNT — snap to entering state without animation, then
-       animate to default in next frame.
+       MOUNT — snap-then-animate to dodge transition pile-ups
        ============================================================ */
     function mountCard(card) {
         if (!cardEl) return;
 
-        // 1. SNAP without transitions
         cardEl.style.transition = "none";
         cardEl.classList.remove("is-flying-left", "is-flying-right");
         cardEl.classList.add("is-entering");
         cardEl.style.transform = "";
         cardEl.style.opacity   = "";
-        // force reflow so the snap takes effect before we re-enable transitions
         void cardEl.offsetWidth;
         cardEl.style.transition = "";
 
-        // 2. Fill content
         if (artEl) {
             if (card.art && /^(https?:|data:|assets\/|img\/|\/)/.test(card.art)) {
                 artEl.style.backgroundImage = `url("${card.art}")`;
@@ -240,7 +267,6 @@
         if (leftEl)  leftEl.textContent  = (card.left  && card.left.label)  || "";
         if (rightEl) rightEl.textContent = (card.right && card.right.label) || "";
 
-        // 3. Drop the entering state — animates to default rest pose
         requestAnimationFrame(() => {
             requestAnimationFrame(() => {
                 cardEl.classList.remove("is-entering");
@@ -249,13 +275,14 @@
     }
 
     /* ============================================================
-       DRAG / TILT — bound ONCE, read STATE.currentCard
+       DRAG / TILT (bound once)
+       Side hints: swiping RIGHT → show LEFT hint (so the card
+       doesn't cover the text), and vice-versa.
        ============================================================ */
     function bindCardListeners() {
         if (listenersBound || !cardEl) return;
         listenersBound = true;
 
-        // Idle tilt: only while not dragging and a card is mounted
         cardEl.addEventListener("mousemove", (ev) => {
             if (STATE.dragging) return;
             if (!STATE.currentCard) return;
@@ -274,7 +301,6 @@
             cardEl.style.transform = "";
         });
 
-        // Drag start
         const onDown = (ev) => {
             if (!STATE.currentCard) return;
             if (cardEl.classList.contains("is-flying-left") ||
@@ -289,7 +315,6 @@
         cardEl.addEventListener("mousedown",  onDown);
         cardEl.addEventListener("touchstart", onDown, { passive: false });
 
-        // Drag move + end on the window (so we keep tracking outside the card)
         const onMove = (ev) => {
             if (!STATE.dragging) return;
             ev.preventDefault();
@@ -304,16 +329,18 @@
 
             const card = STATE.currentCard;
             const threshold = 30;
-            const side = dx >  threshold ? "right"
-                       : dx < -threshold ? "left"
-                       : null;
-            if (side !== STATE.currentSide) {
-                STATE.currentSide = side;
-                if (leftEl)  leftEl.classList.toggle("is-active",  side === "left");
-                if (rightEl) rightEl.classList.toggle("is-active", side === "right");
+            const swipeDirection = dx >  threshold ? "right"
+                                 : dx < -threshold ? "left"
+                                 : null;
 
-                if (side === "left"  && card.left)  setBarHints(card.left.delta);
-                else if (side === "right" && card.right) setBarHints(card.right.delta);
+            if (swipeDirection !== STATE.currentSide) {
+                STATE.currentSide = swipeDirection;
+                // INVERTED — swiping right shows the LEFT hint
+                if (leftEl)  leftEl.classList.toggle("is-active",  swipeDirection === "right");
+                if (rightEl) rightEl.classList.toggle("is-active", swipeDirection === "left");
+
+                if (swipeDirection === "right" && card.right) setBarHints(card.right.delta);
+                else if (swipeDirection === "left" && card.left) setBarHints(card.left.delta);
                 else clearBarHints();
             }
         };
@@ -327,7 +354,6 @@
             if (card && STATE.dx >  COMMIT && card.right) commitSwipe(card, "right");
             else if (card && STATE.dx < -COMMIT && card.left) commitSwipe(card, "left");
             else {
-                // snap back
                 cardEl.style.transform = "";
                 if (leftEl)  leftEl.classList.remove("is-active");
                 if (rightEl) rightEl.classList.remove("is-active");
@@ -353,7 +379,7 @@
         if (leftEl)  leftEl.classList.remove("is-active");
         if (rightEl) rightEl.classList.remove("is-active");
         STATE.currentSide = null;
-        STATE.currentCard = null; // protect from stray drag during flight
+        STATE.currentCard = null;
 
         showReaction(choice.reaction || "");
 
@@ -365,16 +391,20 @@
 
     function showReaction(text) {
         if (!reactionEl) return;
-        reactionEl.textContent = text || "";
         clearTimeout(showReaction._t);
-        if (text) {
-            reactionEl.classList.add("is-visible");
-            showReaction._t = setTimeout(() => {
-                reactionEl.classList.remove("is-visible");
-            }, 1900);
-        } else {
+        if (!text) {
             reactionEl.classList.remove("is-visible");
+            return;
         }
+        const protagonist = (window.Game && window.Game.config.protagonist) || "Аврора";
+        const speakerName = protagonist.charAt(0).toUpperCase() + protagonist.slice(1);
+        reactionEl.innerHTML =
+            `<div class="thought__speaker">${speakerName}</div>` +
+            `<div class="thought__body">${escapeHtml(text)}</div>`;
+        reactionEl.classList.add("is-visible");
+        showReaction._t = setTimeout(() => {
+            reactionEl.classList.remove("is-visible");
+        }, 2400);
     }
 
     /* ============================================================
@@ -388,11 +418,16 @@
         return { x: ev.clientX, y: ev.clientY };
     }
     function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+    function escapeHtml(s) {
+        return String(s).replace(/[&<>"]/g, (c) => (
+            { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]
+        ));
+    }
 
     document.addEventListener("DOMContentLoaded", init);
 
     window.mini = Object.assign(window.mini || {}, {
-        config,
+        register,
         start,
         stop,
         setBar(id, v) {
@@ -401,5 +436,6 @@
         },
         getState: snapshotState,
         isRunning: () => STATE.running,
+        _registry: REGISTRY,
     });
 })();

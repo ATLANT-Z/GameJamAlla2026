@@ -1,11 +1,16 @@
 /* ============================================================
-   dialog.js — render passage payload into the custom UI
-       dialog.render({ speaker, html, choices })
-       dialog.skip()             — finish typewriter instantly
-       dialog.fadeOut() / fadeIn() — for passage transitions
+   dialog.js — render passage payload (multi-line replies)
+       dialog.render({ lines: [{ speaker, html }, ...], choices })
 
-   It does NOT touch <tw-passage>. main.js parses tw-passage and
-   calls render() with cleaned content.
+   Behaviour:
+       • Each line is typed out via typewriter.
+       • While typing, a click on the dialog skips to end.
+       • After a line finishes typing, "▾" hint pulses.
+       • A click advances to the next line.
+       • On the LAST line, choices are rendered above the dialog
+         (fade-up). Clicking the dialog there does nothing.
+       • Inline links inside the last line (.inline-link) are
+         clickable directly without ever needing the choices row.
    ============================================================ */
 
 (function () {
@@ -20,7 +25,13 @@
 
     let typing = false;
     let skipRequested = false;
-    let currentRenderToken = 0;     // cancels stale typewriters on passage swap
+    let renderToken = 0;
+
+    // Current playback state
+    let currentLines = [];
+    let currentIndex = 0;
+    let currentChoices = [];
+    let awaitingClick = false;
 
     function init() {
         elFooter  = document.querySelector("[data-footer]");
@@ -31,56 +42,110 @@
         elChoices = document.querySelector("[data-choices]");
 
         if (elDialog) {
-            elDialog.addEventListener("click", (ev) => {
-                if (!Game.config.skipOnClick) return;
-                if (!typing) return;
-                if (ev.target.closest(".choice")) return;
-                skipRequested = true;
-            });
+            elDialog.addEventListener("click", onDialogClick);
+        }
+    }
+
+    function onDialogClick(ev) {
+        // Don't intercept clicks on choices or inline links — they have own handlers
+        if (ev.target.closest(".choice")) return;
+        if (ev.target.closest(".inline-link")) return;
+
+        if (typing && Game.config.skipOnClick) {
+            skipRequested = true;
+            return;
+        }
+        if (awaitingClick) {
+            advance();
         }
     }
 
     /* ============================================================
-       render() — main entry
-       Animates leave (choices + text), then types the new content,
-       then fades the choices up.
+       PUBLIC: render
+       Accepts both the new multi-line shape and the legacy
+       { speaker, html, choices } shape for back-compat.
        ============================================================ */
     async function render(payload) {
-        const token = ++currentRenderToken;
+        const token = ++renderToken;
+        awaitingClick = false;
 
-        // 1. Leave: animate old choices out + fade text
+        // Normalise payload
+        let lines, choices;
+        if (Array.isArray(payload.lines)) {
+            lines = payload.lines.slice();
+            choices = payload.choices || [];
+        } else {
+            lines = [{ speaker: payload.speaker || "", html: payload.html || "" }];
+            choices = payload.choices || [];
+        }
+        currentLines = lines;
+        currentChoices = choices;
+        currentIndex = 0;
+
         await leave();
-        if (token !== currentRenderToken) return;
+        if (token !== renderToken) return;
 
-        // 2. Speaker label
-        if (elSpeaker) elSpeaker.textContent = payload.speaker || "";
+        if (!lines.length) {
+            // Empty payload — just render choices if any
+            if (choices.length) renderChoices(choices);
+            return;
+        }
 
-        // 3. Hint hidden until typing finishes
-        if (elHint) elHint.classList.remove("is-visible");
-
-        // 4. Typewriter (skips remain valid)
-        await typewrite(payload.html || "", token);
-        if (token !== currentRenderToken) return;
-
-        // 5. Choices
-        const hasChoices = payload.choices && payload.choices.length > 0;
-        if (hasChoices) renderChoices(payload.choices);
-        if (elHint && !hasChoices) elHint.classList.add("is-visible");
+        await playLine(token);
     }
 
+    async function playLine(token) {
+        if (token !== renderToken) return;
+        const line = currentLines[currentIndex];
+        if (!line) return;
+
+        if (elSpeaker) elSpeaker.textContent = line.speaker || "";
+        if (elHint)    elHint.classList.remove("is-visible");
+
+        await typewrite(line.html || "", token);
+        if (token !== renderToken) return;
+
+        const isLast = currentIndex >= currentLines.length - 1;
+
+        if (isLast) {
+            if (currentChoices && currentChoices.length) {
+                renderChoices(currentChoices);
+            }
+            // Inline link inside the last line: if present, no hint
+            const hasInline = elText && elText.querySelector(".inline-link");
+            const hasChoices = currentChoices && currentChoices.length;
+            if (elHint && !hasChoices && !hasInline) {
+                elHint.classList.add("is-visible");
+                awaitingClick = false;
+            } else {
+                awaitingClick = false;
+            }
+        } else {
+            if (elHint) elHint.classList.add("is-visible");
+            awaitingClick = true;
+        }
+    }
+
+    function advance() {
+        awaitingClick = false;
+        currentIndex++;
+        if (currentIndex >= currentLines.length) return;
+        playLine(renderToken);
+    }
+
+    /* ============================================================
+       LEAVE — old choices + text fade out
+       ============================================================ */
     function leave() {
         return new Promise((resolve) => {
-            const outMs = (Game.config.passageOutMs || 220);
+            const outMs = Game.config.passageOutMs || 220;
 
-            // Choices fade out
             if (elChoices) {
-                const buttons = elChoices.querySelectorAll(".choice");
-                buttons.forEach((b, i) => {
-                    b.style.setProperty("animation", "none"); // cancel possibly-running fade-up
+                elChoices.querySelectorAll(".choice").forEach((b) => {
+                    b.style.animation = "none";
                     b.classList.add("is-leaving");
                 });
             }
-            // Text fade out
             if (elText) elText.classList.add("is-leaving");
 
             setTimeout(() => {
@@ -95,7 +160,7 @@
     }
 
     /* ============================================================
-       Typewriter that preserves HTML structure
+       TYPEWRITER — preserves HTML structure (em, strong, span.inline-link)
        ============================================================ */
     function typewrite(html, token) {
         return new Promise((resolve) => {
@@ -104,9 +169,11 @@
             skipRequested = false;
             elText.innerHTML = "";
 
-            // Build ops list from html
             const sourceRoot = document.createElement("div");
             sourceRoot.innerHTML = html;
+
+            // Inline-link clicks are handled globally by main.js via delegation
+            // on `.inline-link[data-passage]` — no per-node listener wiring needed.
 
             const ops = [];
             (function walk(node) {
@@ -117,14 +184,13 @@
                         const tag = child.tagName.toLowerCase();
                         const attrs = {};
                         for (const a of child.attributes) attrs[a.name] = a.value;
-                        ops.push({ type: "open", tag, attrs });
+                        ops.push({ type: "open", tag, attrs, source: child });
                         walk(child);
                         ops.push({ type: "close" });
                     }
                 });
             })(sourceRoot);
 
-            // Trailing caret
             const caret = document.createElement("span");
             caret.className = "caret";
             caret.textContent = "▍";
@@ -140,7 +206,7 @@
             let acc = 0;
 
             function step(now) {
-                if (token !== currentRenderToken) { typing = false; resolve(); return; }
+                if (token !== renderToken) { typing = false; resolve(); return; }
                 if (!typing) return;
                 const dt = now - lastTime;
                 lastTime = now;
@@ -181,10 +247,11 @@
     }
 
     /* ============================================================
-       Choices
+       CHOICES
        ============================================================ */
     function renderChoices(choices) {
         if (!elChoices) return;
+        elChoices.innerHTML = "";
         choices.forEach((c, idx) => {
             const btn = document.createElement("button");
             btn.type = "button";
@@ -208,26 +275,8 @@
         });
     }
 
-    function isTyping() { return typing; }
     function skip() { skipRequested = true; }
-
-    /* ============================================================
-       Footer-wide fade (used on bigger transitions, e.g. mini-game)
-       ============================================================ */
-    function fadeOut() {
-        return new Promise((resolve) => {
-            if (!elFooter) return resolve();
-            elFooter.classList.add("is-leaving");
-            setTimeout(resolve, 280);
-        });
-    }
-    function fadeIn() {
-        return new Promise((resolve) => {
-            if (!elFooter) return resolve();
-            elFooter.classList.remove("is-leaving");
-            setTimeout(resolve, 280);
-        });
-    }
+    function isTyping() { return typing; }
 
     document.addEventListener("DOMContentLoaded", init);
 
@@ -235,8 +284,6 @@
         render,
         skip,
         isTyping,
-        fadeOut,
-        fadeIn,
         setSpeed(cps) { if (cps > 0) Game.config.typewriterCps = cps; },
     });
 })();

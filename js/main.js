@@ -1,13 +1,20 @@
 /* ============================================================
-   main.js — watches the passage element configured by Game.config
-   and pipes its contents into our custom dialog UI.
+   main.js — watches <tw-passage>, parses Harlowe content, drives
+   the custom UI.
 
    Passage authoring contract:
-     • Any HTML is fine; <em>, <strong>, etc. survive the typewriter.
-     • Leading "@Speaker: …" sets the speaker banner.
-     • Links — <a data-passage>, <tw-link data-passage>, <button data-passage>,
-       OR Twine [[Label|Target]] (we parse it ourselves as a fallback) —
-       are extracted into the choices row above the dialog.
+     • Replies separated by "@@@".
+     • "ИМЯ: текст…@@@" — speaker banner shows "ИМЯ".
+     • "МИР: текст…@@@" — narration, no speaker banner.
+     • Inside a reply, write "INLINE: <link>" to make that link
+       appear as a glowing inline span in the dialog body.
+     • Plain Harlowe <tw-link> (no INLINE marker) become buttons
+       above the dialog.
+
+   When the passage starts a mini-game (mini.start("id") inside a
+   <tw-collapsed><script>… block), the footer fades out, the
+   parsed reply queue is held until "mini:complete" fires, then
+   the queue is rendered.
    ============================================================ */
 
 (function () {
@@ -16,23 +23,30 @@
     let twEl = null;
     let observer = null;
     let lastContent = "";
+    let pendingPayload = null;
 
     function init() {
         attachWatcher();
+        // When a passage's mini-game completes, flush the held payload
+        window.addEventListener("mini:complete", () => {
+            if (pendingPayload) {
+                const p = pendingPayload;
+                pendingPayload = null;
+                showFooter().then(() => window.dialog.render(p));
+            } else {
+                showFooter();
+            }
+        });
     }
 
     function attachWatcher() {
         const sel = (window.Game && window.Game.config.passageSelector) || "tw-passage";
         twEl = document.querySelector(sel);
         if (!twEl) {
-            // Try again on the next frame — Twine sometimes mounts late.
             requestAnimationFrame(attachWatcher);
             return;
         }
-
-        // Initial render if there's already content
         if (twEl.innerHTML.trim()) syncFromPassage();
-
         observer && observer.disconnect();
         observer = new MutationObserver(() => syncFromPassage());
         observer.observe(twEl, { childList: true, subtree: true, characterData: true });
@@ -44,37 +58,233 @@
         if (raw === lastContent) return;
         lastContent = raw;
 
-        // Sandbox to strip scripts (Twine already executed them)
-        const sandbox = document.createElement("div");
-        sandbox.innerHTML = raw;
-        sandbox.querySelectorAll("script").forEach((s) => s.remove());
+        const payload = parsePassage(raw, twEl);
 
-        // Convert [[Label|Target]] / [[Target]] left in the text into <a> elements
-        // (in real Twine they're already <a data-passage>, but we keep this as a safety net)
+        // If a mini-game was just started by THIS passage's <tw-collapsed>
+        // script (or the user fired mini.start in any other way before us),
+        // hide the footer and queue the payload until completion.
+        if (window.mini && window.mini.isRunning()) {
+            pendingPayload = payload;
+            hideFooter();
+            return;
+        }
+        window.dialog.render(payload);
+    }
+
+    /* ============================================================
+       PARSE PASSAGE — Harlowe-flavoured
+       ============================================================ */
+    function parsePassage(rawHtml, sourceEl) {
+        // Sandbox copy so we can strip non-content nodes safely
+        const sandbox = document.createElement("div");
+        sandbox.innerHTML = rawHtml;
+
+        // Drop sidebar / scripts / collapsed (Harlowe already ran them)
+        sandbox.querySelectorAll(
+            "tw-sidebar, script, tw-collapsed, style"
+        ).forEach((n) => n.remove());
+
+        // Normalise: <tw-consecutive-br> and stray <br> at top become " "
+        sandbox.querySelectorAll("tw-consecutive-br").forEach((n) => n.replaceWith(" "));
+
+        // Convert raw [[Label|Target]] (when Twine left them un-rendered) into <a>
         convertBracketLinks(sandbox);
 
-        // Collect choices, remove from body
-        const choices = [];
-        sandbox.querySelectorAll(
-            "a[data-passage], tw-link[data-passage], button[data-passage]"
-        ).forEach((node) => {
-            const target = node.dataset.passage;
-            const label  = node.innerHTML.trim();
-            choices.push({
-                label,
-                onClick: () => navigateTo(target),
-            });
-            node.remove();
+        let html = sandbox.innerHTML;
+        // Split into replies on @@@ (also tolerate \n@@@\n)
+        let chunks = html.split(/@@@/g).map((s) => s.trim()).filter((s) => s.length > 0);
+
+        // If no @@@ at all — treat the whole thing as one reply
+        if (chunks.length === 0 && html.trim()) chunks = [html.trim()];
+
+        const lines = [];
+        const choices = [];  // collected from ALL non-inline tw-links
+
+        chunks.forEach((chunkHtml) => {
+            const line = parseChunk(chunkHtml, sourceEl);
+            if (line.choices && line.choices.length) {
+                choices.push(...line.choices);
+            }
+            // Skip lines that are pure choices with no text
+            if (line.html.trim() || line.speaker) {
+                lines.push({ speaker: line.speaker, html: line.html });
+            }
         });
 
-        // Speaker extraction
-        const { speaker, html } = extractSpeaker(sandbox.innerHTML);
+        return { lines, choices };
+    }
 
-        window.dialog.render({ speaker, html, choices });
+    /* ------------------------------------------------------------
+       parseChunk — one segment between @@@ delimiters.
+       Returns { speaker, html, choices[] }
+       ------------------------------------------------------------ */
+    function parseChunk(chunkHtml, sourceEl) {
+        // 1. Speaker prefix: "ИМЯ: ..." at the start (uppercase Cyr/Lat letters, spaces)
+        let speaker = "";
+        const speakerMatch = chunkHtml.match(/^\s*([А-ЯЁA-Z][А-ЯЁA-Z\s\-]+?)\s*:\s*([\s\S]*)$/);
+        let body = chunkHtml;
+        if (speakerMatch) {
+            const name = speakerMatch[1].trim();
+            // "МИР" = narration, no banner
+            if (name !== "МИР" && name !== "WORLD") speaker = name;
+            body = speakerMatch[2];
+        }
+
+        // 2. Build a DOM subtree to work with for link extraction
+        const subtree = document.createElement("div");
+        subtree.innerHTML = body;
+
+        // Drop leading <br>s (Harlowe loves emitting them)
+        while (subtree.firstChild &&
+               subtree.firstChild.nodeName === "BR") {
+            subtree.firstChild.remove();
+        }
+
+        const choices = [];
+
+        // 3. INLINE links — find "INLINE:" markers followed by <tw-expression>...</tw-expression>
+        //    or <a data-passage>.  Replace each with a glowing inline span.
+        replaceInlineLinks(subtree, sourceEl);
+
+        // 4. Remaining <tw-link> and <a data-passage> become CHOICES (collected, removed from body)
+        const remaining = subtree.querySelectorAll(
+            "tw-link:not([data-inline]), a[data-passage]:not([data-inline]), tw-expression:not([data-inline]) tw-link"
+        );
+        remaining.forEach((node) => {
+            // Inside tw-expression — clicking the inner tw-link triggers Twine
+            const isInsideExpression = node.closest("tw-expression");
+            const label = node.textContent.trim();
+            if (!label) return;
+            const originalLink = pickOriginalLink(node, sourceEl);
+            choices.push({
+                label,
+                onClick: () => clickOriginal(originalLink),
+            });
+            // Remove the expression entirely from body so we don't leave its open-button etc.
+            const removalTarget = isInsideExpression || node;
+            removalTarget.remove();
+        });
+
+        // 5. Tidy: remove now-empty tw-expression wrappers
+        subtree.querySelectorAll("tw-expression").forEach((e) => {
+            if (!e.textContent.trim()) e.remove();
+        });
+
+        // 6. Strip <tw-open-button> (debug widgets)
+        subtree.querySelectorAll("tw-open-button").forEach((e) => e.remove());
+
+        return { speaker, html: subtree.innerHTML, choices };
+    }
+
+    function extractTargetFromCarrier(carrier) {
+        // 1. Explicit data-passage on the carrier or any descendant
+        if (carrier.dataset && carrier.dataset.passage) return carrier.dataset.passage;
+        const inner = carrier.querySelector && carrier.querySelector("[data-passage]");
+        if (inner) return inner.dataset.passage;
+        // 2. Harlowe link-goto: <tw-expression title="[[Label|Target]]" name="link-goto">
+        const title = (carrier.getAttribute && carrier.getAttribute("title")) ||
+                      (inner && inner.closest && inner.closest("tw-expression") &&
+                       inner.closest("tw-expression").getAttribute("title"));
+        if (title) {
+            const m = title.match(/\[\[([^\]]+?)\]\]/);
+            if (m) {
+                const body = m[1];
+                const parts = body.includes("|") ? body.split("|") : [body, body];
+                return parts[1].trim();
+            }
+        }
+        return null;
+    }
+
+    function replaceInlineLinks(subtree, sourceEl) {
+        // Pattern: an "INLINE:" text node followed by <tw-expression> or <a data-passage>.
+        // We walk text nodes, find the marker, then grab the next sibling element.
+        const walker = document.createTreeWalker(subtree, NodeFilter.SHOW_TEXT, null);
+        const markers = [];
+        let n;
+        while ((n = walker.nextNode())) {
+            if (/INLINE\s*:/.test(n.textContent)) markers.push(n);
+        }
+
+        markers.forEach((textNode) => {
+            const txt = textNode.textContent;
+            const m = txt.match(/^([\s\S]*?)INLINE\s*:\s*([\s\S]*)$/);
+            if (!m) return;
+            const before = m[1];
+            const after = m[2];
+
+            const parent = textNode.parentNode;
+            if (!parent) return;
+
+            // Insert "before" text back
+            if (before) parent.insertBefore(document.createTextNode(before), textNode);
+            // Insert "after" text in place of the marker (may be empty)
+            const afterNode = document.createTextNode(after);
+            parent.insertBefore(afterNode, textNode);
+            textNode.remove();
+
+            // Now find the inline target: the next element sibling after `afterNode`
+            // (the <tw-expression> usually sits there); or if `after` already contains
+            // a link inline-style, look inside.
+            let candidate = afterNode.nextSibling;
+            while (candidate && candidate.nodeType === Node.TEXT_NODE && !candidate.textContent.trim()) {
+                candidate = candidate.nextSibling;
+            }
+            if (!candidate) return;
+
+            let twLink = null;
+            if (candidate.nodeName === "TW-EXPRESSION") {
+                twLink = candidate.querySelector("tw-link");
+            } else if (candidate.nodeName === "TW-LINK") {
+                twLink = candidate;
+            } else if (candidate.nodeType === Node.ELEMENT_NODE && candidate.matches("a[data-passage]")) {
+                twLink = candidate;
+            }
+            if (!twLink) return;
+
+            const label = twLink.textContent.trim();
+            const carrier = candidate.nodeName === "TW-EXPRESSION" ? candidate : twLink;
+            const target = extractTargetFromCarrier(carrier) ||
+                           extractTargetFromCarrier(twLink) ||
+                           label;
+
+            const span = document.createElement("span");
+            span.className = "inline-link";
+            span.dataset.inline = "true";
+            if (target) span.dataset.passage = target;
+            span.textContent = label;
+
+            // Replace the carrier element with our span
+            carrier.parentNode.replaceChild(span, carrier);
+        });
+    }
+
+    function pickOriginalLink(node, sourceEl) {
+        // We can't reliably reuse `node` across passage swaps because tw-passage
+        // may rerender. Easiest fix: find the SAME label inside the LIVE
+        // sourceEl right now and call .click() on the live element.
+        // But cloning the click handler costs us nothing extra here, since the
+        // user can also target by data-passage.
+        const passageAttr = node.dataset && node.dataset.passage;
+        if (passageAttr) {
+            return sourceEl.querySelector(`[data-passage="${cssEscape(passageAttr)}"]`) || node;
+        }
+        // Try resolving by visible label text
+        const label = node.textContent.trim();
+        const all = sourceEl.querySelectorAll("tw-link, a[data-passage]");
+        for (const l of all) {
+            if (l.textContent.trim() === label) return l;
+        }
+        return node;
+    }
+
+    function clickOriginal(el) {
+        if (!el) return;
+        try { el.click(); }
+        catch (e) { console.error(e); }
     }
 
     function convertBracketLinks(rootEl) {
-        // Walk text nodes and replace [[Label|Target]] / [[Target]] occurrences
         const walker = document.createTreeWalker(rootEl, NodeFilter.SHOW_TEXT, null);
         const targets = [];
         let n;
@@ -89,48 +299,20 @@
             let cursor = 0;
             let m;
             while ((m = re.exec(node.textContent))) {
-                if (m.index > cursor) {
-                    frag.appendChild(document.createTextNode(
-                        node.textContent.slice(cursor, m.index)));
-                }
+                if (m.index > cursor)
+                    frag.appendChild(document.createTextNode(node.textContent.slice(cursor, m.index)));
                 const body = m[1];
-                const [labelPart, targetPart] = body.includes("|")
-                    ? body.split("|")
-                    : [body, body];
+                const [labelPart, targetPart] = body.includes("|") ? body.split("|") : [body, body];
                 const a = document.createElement("a");
                 a.dataset.passage = targetPart.trim();
                 a.textContent = labelPart.trim();
                 frag.appendChild(a);
                 cursor = m.index + m[0].length;
             }
-            if (cursor < node.textContent.length) {
+            if (cursor < node.textContent.length)
                 frag.appendChild(document.createTextNode(node.textContent.slice(cursor)));
-            }
             parent.replaceChild(frag, node);
         });
-    }
-
-    function extractSpeaker(html) {
-        const trimmed = html.replace(/^\s+/, "");
-        const m = trimmed.match(/^@([^:\n<]+):\s*([\s\S]*)$/);
-        if (m) return { speaker: m[1].trim(), html: m[2] };
-        return { speaker: "", html: trimmed };
-    }
-
-    function navigateTo(target) {
-        // Dev / custom override wins
-        if (window.Game && typeof window.Game.onNavigate === "function") {
-            window.Game.onNavigate(target);
-            return;
-        }
-        // Real Twine: simulate a click on the original link inside <tw-passage>
-        const sel = (window.Game && window.Game.config.passageSelector) || "tw-passage";
-        const original = document.querySelector(
-            `${sel} [data-passage="${cssEscape(target)}"]`
-        );
-        if (original) { original.click(); return; }
-        console.info("[main] navigate request:", target,
-            "— no handler. Set Game.onNavigate or wire a real Twine link.");
     }
 
     function cssEscape(s) {
@@ -138,9 +320,66 @@
         return String(s).replace(/[^a-zA-Z0-9_-]/g, "\\$&");
     }
 
+    /* ============================================================
+       Footer show/hide (while mini-game owns the screen)
+       ============================================================ */
+    function hideFooter() {
+        const f = document.querySelector("[data-footer]");
+        if (!f) return Promise.resolve();
+        f.classList.add("is-leaving");
+        return new Promise((r) => setTimeout(r, 280));
+    }
+    function showFooter() {
+        const f = document.querySelector("[data-footer]");
+        if (!f) return Promise.resolve();
+        f.classList.remove("is-leaving");
+        return new Promise((r) => setTimeout(r, 280));
+    }
+
+    /* ============================================================
+       PUBLIC: Game.navigate(target)
+       Single source of truth for "go to a passage": dev override
+       wins, then we try to click the live tw-link / a[data-passage]
+       inside the watched passage element.
+       ============================================================ */
+    function navigate(target) {
+        if (!target) return;
+        if (window.Game && typeof window.Game.onNavigate === "function") {
+            window.Game.onNavigate(target);
+            return;
+        }
+        const sel = (window.Game && window.Game.config.passageSelector) || "tw-passage";
+        const root = document.querySelector(sel);
+        if (!root) return;
+
+        // 1. Element with data-passage="target"
+        const direct = root.querySelector(`[data-passage="${cssEscape(target)}"]`);
+        if (direct) { direct.click(); return; }
+
+        // 2. Harlowe link-goto: tw-expression with title containing [[…|target]]
+        for (const e of root.querySelectorAll("tw-expression")) {
+            const title = e.getAttribute("title") || "";
+            if (title.endsWith(`|${target}]]`) || title === `[[${target}]]`) {
+                const inner = e.querySelector("tw-link");
+                (inner || e).click();
+                return;
+            }
+        }
+        console.info("[main] navigate:", target, "— no matching link found.");
+    }
+
+    // Global delegated click for inline-links anywhere in the document
+    document.addEventListener("click", (ev) => {
+        const link = ev.target.closest && ev.target.closest(".inline-link[data-passage]");
+        if (!link) return;
+        ev.preventDefault();
+        ev.stopPropagation();
+        navigate(link.dataset.passage);
+    });
+
     document.addEventListener("DOMContentLoaded", init);
 
-    /* Expose a re-attach hook in case the user mounts a different element later */
     window.Game = window.Game || {};
     window.Game.rewatch = attachWatcher;
+    window.Game.navigate = navigate;
 })();

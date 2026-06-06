@@ -186,6 +186,71 @@
     text-shadow: 0 0 10px rgba(207, 226, 255, .6);
 }
 
+/* ============================================================
+   INLINE LINK — a glowing clickable phrase inside the dialog body
+   ============================================================ */
+.inline-link {
+    position: relative;
+    display: inline-block;
+    cursor: pointer;
+    font-family: inherit;
+    font-style: normal;
+    font-weight: 500;
+    color: var(--c-gold-0);
+    padding: 0 4px;
+    text-shadow:
+        0 0 10px rgba(255, 242, 193, .55),
+        0 0 22px rgba(212, 166, 74, .30);
+    transition: color 220ms var(--ease-soft), letter-spacing 220ms var(--ease-soft), text-shadow 220ms var(--ease-soft);
+    isolation: isolate;
+}
+
+/* hairline underline */
+.inline-link::after {
+    content: '';
+    position: absolute;
+    left: 4px;
+    right: 4px;
+    bottom: -2px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--c-gold-1) 40%, var(--c-gold-1) 60%, transparent);
+    opacity: .75;
+    transition: opacity 220ms var(--ease-soft), transform 220ms var(--ease-soft);
+    transform-origin: 50% 50%;
+}
+
+/* puddle of glow behind on hover */
+.inline-link::before {
+    content: '';
+    position: absolute;
+    inset: -4px -8px;
+    z-index: -1;
+    background: radial-gradient(60% 80% at 50% 50%,
+        rgba(255, 242, 193, .35),
+        rgba(184, 162, 255, .15) 60%,
+        transparent 80%);
+    filter: blur(6px);
+    opacity: 0;
+    transition: opacity 240ms var(--ease-soft);
+}
+
+.inline-link:hover,
+.inline-link:focus-visible {
+    color: #fff8d8;
+    letter-spacing: .03em;
+    text-shadow:
+        0 0 14px rgba(255, 242, 193, .9),
+        0 0 28px rgba(184, 162, 255, .55);
+    outline: none;
+}
+.inline-link:hover::before,
+.inline-link:focus-visible::before { opacity: 1; }
+.inline-link:hover::after,
+.inline-link:focus-visible::after {
+    opacity: 1;
+    transform: scaleX(1.04);
+}
+
 .dialog__text .caret {
     display: inline-block;
     width: .55em;
