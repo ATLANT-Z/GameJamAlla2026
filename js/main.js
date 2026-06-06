@@ -119,10 +119,12 @@
        Returns { speaker, html, choices[] }
        ------------------------------------------------------------ */
     function parseChunk(chunkHtml, sourceEl) {
-        // 1. Speaker prefix: "ИМЯ: ..." at the start (uppercase Cyr/Lat letters, spaces)
+        // 1. Speaker prefix: "ИМЯ: ..." at the start. Strip leading <br>s
+        //    and whitespace first — Harlowe loves emitting them between replies.
+        let cleaned = chunkHtml.replace(/^(?:\s|<br\s*\/?\s*>|&nbsp;)+/i, "");
         let speaker = "";
-        const speakerMatch = chunkHtml.match(/^\s*([А-ЯЁA-Z][А-ЯЁA-Z\s\-]+?)\s*:\s*([\s\S]*)$/);
-        let body = chunkHtml;
+        let body = cleaned;
+        const speakerMatch = cleaned.match(/^([А-ЯЁA-Z][А-ЯЁA-Z0-9\s\-]+?)\s*:\s*([\s\S]*)$/);
         if (speakerMatch) {
             const name = speakerMatch[1].trim();
             // "МИР" = narration, no banner

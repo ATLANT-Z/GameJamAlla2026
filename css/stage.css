@@ -2,7 +2,7 @@
    stage.css — z-stack only. Layout now lives in component files.
    ============================================================ */
 
-.stage {
+body {
     position: relative;
     width: 100vw;
     height: 100vh;

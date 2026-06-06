@@ -26,10 +26,16 @@
     function resolveFullId(family, suffix) {
         // "aurora_sad" passed as suffix → use as-is
         if (window.sprites.has(suffix)) return suffix;
-        const joined = family + "_" + suffix;
-        if (window.sprites.has(joined)) return joined;
-        // last-resort: return suffix even if not registered (will warn later)
-        return joined;
+        // Try the family literally, then case-folded (Game.config.protagonist
+        // can be "Аврора"/"Aurora"/"aurora" — registry keys are lowercase).
+        const variants = [
+            `${family}_${suffix}`,
+            `${family.toLowerCase()}_${suffix}`,
+            `${family.toLowerCase()}_${suffix.toLowerCase()}`,
+        ];
+        for (const v of variants) if (window.sprites.has(v)) return v;
+        // last-resort: return the most readable miss so the warn message is clear
+        return `${family}_${suffix}`;
     }
 
     function makeInner(entry) {

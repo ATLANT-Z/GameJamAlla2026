@@ -55,64 +55,33 @@
     }
     function bgGet(id) { return _backgrounds[id] || null; }
 
-    // ----- Inline SVG placeholders (so the scene isn't blank) -----
-    // Schematic silhouettes — replace by real art any time.
+    // ----- Inline SVG placeholders -----
+    // Plain dark rectangle with a thin gold outline + a tiny label.
+    // Just a slot for "where the character would be"; swap with real art via
+    // sprites.register("aurora_sad", { src: "img/aurora_sad.png" })
+    // or via the sprites: {…} block in game-config.js.
 
-    const svgGirl = (mood) => {
-        const tint = mood === "sad"     ? "#9ec3ff"
-                   : mood === "angry"   ? "#e6a0a0"
-                   : mood === "happy"   ? "#f0d574"
-                   : mood === "scared"  ? "#b9a6ff"
-                   :                      "#cfe2ff";
+    const placeholder = (label, mood) => {
+        const moodTag = mood ? ` · ${mood}` : "";
         return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 560" preserveAspectRatio="xMidYMax meet">
-            <defs>
-                <linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0" stop-color="${tint}" stop-opacity=".95"/>
-                    <stop offset="1" stop-color="#1a234e" stop-opacity=".25"/>
-                </linearGradient>
-            </defs>
-            <ellipse cx="140" cy="115" rx="48" ry="56" fill="url(#g)"/>
-            <path d="M70 540 C 70 360, 110 240, 140 200 C 170 240, 210 360, 210 540 Z" fill="url(#g)"/>
-            <circle cx="125" cy="115" r="4" fill="#0a1230"/>
-            <circle cx="155" cy="115" r="4" fill="#0a1230"/>
-            <path d="M125 140 Q 140 ${mood==="sad"?135:148} 155 140" stroke="#0a1230" stroke-width="2" fill="none"/>
-            <!-- crown -->
-            <path d="M105 70 L120 50 L130 65 L140 45 L150 65 L160 50 L175 70 Z" fill="#d4a64a" stroke="#7c5a1f"/>
-            <circle cx="140" cy="55" r="3" fill="#9ec3ff"/>
+            <rect x="40" y="120" width="200" height="420" rx="6" ry="6"
+                  fill="rgba(10,18,48,0.55)"
+                  stroke="rgba(212,166,74,0.55)" stroke-width="1"/>
+            <text x="140" y="320"
+                  font-family="'Cinzel Decorative', serif"
+                  font-size="14" letter-spacing="3"
+                  text-anchor="middle"
+                  fill="rgba(255,242,193,0.55)">${label.toUpperCase()}</text>
+            <text x="140" y="344"
+                  font-family="'Cormorant Garamond', serif"
+                  font-size="11" letter-spacing="2"
+                  text-anchor="middle"
+                  fill="rgba(207,226,255,0.4)">${moodTag.replace(/^\s·\s/, "")}</text>
         </svg>`;
     };
 
-    const svgNpc = (kind, mood) => {
-        const tint = kind === "knight"    ? "#cfd5e7"
-                   : kind === "maid"      ? "#f4cda3"
-                   : kind === "cat"       ? "#1c1f3c"
-                   :                        "#cfe2ff";
-        return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 560" preserveAspectRatio="xMidYMax meet">
-            <defs>
-                <linearGradient id="g2" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0" stop-color="${tint}"/>
-                    <stop offset="1" stop-color="#0a1230" stop-opacity=".4"/>
-                </linearGradient>
-            </defs>
-            ${kind === "cat" ? `
-                <ellipse cx="140" cy="380" rx="100" ry="60" fill="url(#g2)"/>
-                <ellipse cx="140" cy="280" rx="62" ry="56" fill="url(#g2)"/>
-                <polygon points="90,240 105,210 120,245"  fill="url(#g2)"/>
-                <polygon points="190,240 175,210 160,245" fill="url(#g2)"/>
-                <circle cx="120" cy="280" r="6" fill="#d4a64a"/>
-                <circle cx="160" cy="280" r="6" fill="#d4a64a"/>
-                <path d="M140 295 L135 305 L145 305 Z" fill="#0a1230"/>
-            ` : `
-                <ellipse cx="140" cy="135" rx="48" ry="56" fill="url(#g2)"/>
-                <path d="M70 540 C 70 360, 110 250, 140 220 C 170 250, 210 360, 210 540 Z" fill="url(#g2)"/>
-                <circle cx="125" cy="135" r="4" fill="#0a1230"/>
-                <circle cx="155" cy="135" r="4" fill="#0a1230"/>
-                <path d="M125 160 Q 140 ${mood==="sad"?155:168} 155 160" stroke="#0a1230" stroke-width="2" fill="none"/>
-                ${kind === "knight" ? `<rect x="200" y="180" width="14" height="280" fill="#cfd5e7" stroke="#3a4378"/>` : ""}
-                ${kind === "maid"   ? `<rect x="115" y="180" width="50" height="14" fill="#fff" opacity=".4"/>` : ""}
-            `}
-        </svg>`;
-    };
+    const svgGirl = (mood) => placeholder("aurora", mood);
+    const svgNpc  = (kind, mood) => placeholder(kind, mood);
 
     const svgBg = (kind) => {
         // simple gradients with a few decorations
