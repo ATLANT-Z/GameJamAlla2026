@@ -22,11 +22,13 @@
 
     let twEl = null;
     let observer = null;
+    let storyObserver = null;
     let lastContent = "";
     let pendingPayload = null;
 
     function init() {
         attachWatcher();
+        attachStoryWatcher();   // re-attach when Twine replaces <tw-passage>
         // When a passage's mini-game completes, flush the held payload
         window.addEventListener("mini:complete", () => {
             if (pendingPayload) {
@@ -39,6 +41,25 @@
         });
     }
 
+    function attachStoryWatcher() {
+        const story = document.querySelector("tw-story");
+        if (!story) { requestAnimationFrame(attachStoryWatcher); return; }
+        storyObserver && storyObserver.disconnect();
+        storyObserver = new MutationObserver(() => {
+            const sel = (window.Game && window.Game.config.passageSelector) || "tw-passage";
+            const live = document.querySelector(sel);
+            if (live && live !== twEl) {
+                twEl = live;
+                lastContent = "";
+                observer && observer.disconnect();
+                observer = new MutationObserver(() => syncFromPassage());
+                observer.observe(twEl, { childList: true, subtree: true, characterData: true });
+                syncFromPassage();
+            }
+        });
+        storyObserver.observe(story, { childList: true });
+    }
+
     function attachWatcher() {
         const sel = (window.Game && window.Game.config.passageSelector) || "tw-passage";
         twEl = document.querySelector(sel);
@@ -46,15 +67,38 @@
             requestAnimationFrame(attachWatcher);
             return;
         }
-        if (twEl.innerHTML.trim()) syncFromPassage();
+        if (extractStoryHtml(twEl).trim()) syncFromPassage();
         observer && observer.disconnect();
         observer = new MutationObserver(() => syncFromPassage());
+        // Watch the WHOLE passage subtree, but compare only the story tail —
+        // so we don't re-parse every time a tw-open-button blinks in a header.
         observer.observe(twEl, { childList: true, subtree: true, characterData: true });
+    }
+
+    /* ------------------------------------------------------------
+       extractStoryHtml — slice the passage at the LAST <tw-include>.
+       Everything before that block is "headers" (footer-dialog, mini,
+       cast, bg, starfield) — already mounted in the live DOM. Story
+       text always sits after them.
+       ------------------------------------------------------------ */
+    function extractStoryHtml(rootEl) {
+        if (!rootEl) return "";
+        const kids = Array.from(rootEl.childNodes);
+        // find the last child that is a <tw-include> (header block)
+        let lastIncludeIdx = -1;
+        for (let i = kids.length - 1; i >= 0; i--) {
+            if (kids[i].nodeType === Node.ELEMENT_NODE &&
+                kids[i].tagName === "TW-INCLUDE") { lastIncludeIdx = i; break; }
+        }
+        const tail = kids.slice(lastIncludeIdx + 1);
+        const wrap = document.createElement("div");
+        tail.forEach((n) => wrap.appendChild(n.cloneNode(true)));
+        return wrap.innerHTML;
     }
 
     function syncFromPassage() {
         if (!twEl) return;
-        const raw = twEl.innerHTML;
+        const raw = extractStoryHtml(twEl);
         if (raw === lastContent) return;
         lastContent = raw;
 
@@ -79,9 +123,12 @@
         const sandbox = document.createElement("div");
         sandbox.innerHTML = rawHtml;
 
-        // Drop sidebar / scripts / collapsed (Harlowe already ran them)
+        // Drop ALL Twine machinery that isn't story content.
+        // tw-include = header block (already mounted live, must NOT appear in dialog).
+        // tw-collapsed = collapsed/script block (already ran).
+        // tw-sidebar / script / style = irrelevant.
         sandbox.querySelectorAll(
-            "tw-sidebar, script, tw-collapsed, style"
+            "tw-sidebar, script, style, tw-include, tw-collapsed"
         ).forEach((n) => n.remove());
 
         // Normalise: <tw-consecutive-br> and stray <br> at top become " "
