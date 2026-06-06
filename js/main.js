@@ -20,16 +20,21 @@
 (function () {
     "use strict";
 
-    let twEl = null;
-    let observer = null;
-    let storyObserver = null;
-    let lastContent = "";
-    let pendingPayload = null;
+    /* ============================================================
+       Авторский контракт:
+       Весь текст пассажа автор кладёт в <section>…</section>.
+       Этот файл следит за этим <section>, парсит его и кормит
+       dialog.render(). Всё остальное (шапки, меню, no-header,
+       rehome и прочее) — не дело этого модуля.
+       ============================================================ */
+
+    let lastSection = null;     // последний <section>, который мы наблюдали
+    let lastContent = "";       // его innerHTML на момент прошлой синхры
+    let pendingPayload = null;  // payload, придерживаемый пока работает мини-игра
+    let globalObserver = null;
 
     function init() {
-        attachWatcher();
-        attachStoryWatcher();   // re-attach when Twine replaces <tw-passage>
-        // When a passage's mini-game completes, flush the held payload
+        startWatching();
         window.addEventListener("mini:complete", () => {
             if (pendingPayload) {
                 const p = pendingPayload;
@@ -41,121 +46,62 @@
         });
     }
 
-    function attachStoryWatcher() {
-        const story = document.querySelector("tw-story");
-        if (!story) { requestAnimationFrame(attachStoryWatcher); return; }
-        storyObserver && storyObserver.disconnect();
-        storyObserver = new MutationObserver((muts) => {
-            const sel = (window.Game && window.Game.config.passageSelector) || "tw-passage";
-            const live = document.querySelector(sel);
-            // Tags-attribute change on tw-story → force a re-sync even if
-            // the passage HTML happens to be byte-identical.
-            const tagsChanged = muts.some((m) => m.type === "attributes" && m.attributeName === "tags");
-            if (tagsChanged) lastContent = "\0";
-            if (live && live !== twEl) {
-                twEl = live;
-                lastContent = "";
-                observer && observer.disconnect();
-                observer = new MutationObserver(() => syncFromPassage());
-                observer.observe(twEl, { childList: true, subtree: true, characterData: true });
-            }
-            syncFromPassage();
-        });
-        // Watch both childList (passage swaps) AND attributes (tags="hide_header")
-        storyObserver.observe(story, {
+    /* ------------------------------------------------------------
+       Один глобальный observer на tw-story (или body как fallback).
+       Слушает ВСЁ: childList, subtree, characterData. На каждую
+       мутацию находим текущий <section> в tw-passage и пересинкаем.
+       ------------------------------------------------------------ */
+    function startWatching() {
+        const host = document.querySelector("tw-story") || document.body;
+        globalObserver && globalObserver.disconnect();
+        globalObserver = new MutationObserver(scheduleSync);
+        globalObserver.observe(host, {
             childList: true,
-            attributes: true,
-            attributeFilter: ["tags"],
+            subtree: true,
+            characterData: true,
         });
+        // Первая синхра сразу (после возможного начального рендера)
+        scheduleSync();
     }
 
-    function attachWatcher() {
-        const sel = (window.Game && window.Game.config.passageSelector) || "tw-passage";
-        twEl = document.querySelector(sel);
-        if (!twEl) {
-            requestAnimationFrame(attachWatcher);
+    // Дебаунс — Twine может прислать целый шторм мутаций пока строит
+    // пассаж. Ждём пока он успокоится 40 мс — и тогда уже парсим.
+    let syncTimer = 0;
+    function scheduleSync() {
+        if (syncTimer) clearTimeout(syncTimer);
+        syncTimer = setTimeout(() => {
+            syncTimer = 0;
+            syncFromSection();
+        }, 40);
+    }
+
+    function currentSection() {
+        // <section> может лежать где угодно внутри tw-passage; берём первый.
+        const passage = document.querySelector("tw-passage");
+        if (!passage) return null;
+        return passage.querySelector("section");
+    }
+
+    function syncFromSection() {
+        const section = currentSection();
+        if (!section) {
+            // Меню / hide_header / пассаж ещё не зарендерился — пропускаем.
             return;
         }
-        if (extractStoryHtml(twEl).trim()) syncFromPassage();
-        observer && observer.disconnect();
-        observer = new MutationObserver(() => syncFromPassage());
-        // Watch the WHOLE passage subtree, but compare only the story tail —
-        // so we don't re-parse every time a tw-open-button blinks in a header.
-        observer.observe(twEl, { childList: true, subtree: true, characterData: true });
-    }
-
-    /* ------------------------------------------------------------
-       extractStoryHtml — slice the passage at the LAST <tw-include>.
-       Everything before that block is "headers" (footer-dialog, mini,
-       cast, bg, starfield) — already mounted in the live DOM. Story
-       text always sits after them.
-       ------------------------------------------------------------ */
-    function extractStoryHtml(rootEl) {
-        if (!rootEl) return "";
-        const kids = Array.from(rootEl.childNodes);
-        // find the last child that is a <tw-include> (header block)
-        let lastIncludeIdx = -1;
-        for (let i = kids.length - 1; i >= 0; i--) {
-            if (kids[i].nodeType === Node.ELEMENT_NODE &&
-                kids[i].tagName === "TW-INCLUDE") { lastIncludeIdx = i; break; }
+        // Если <section> пересоздан (новая нода) — обнуляем кэш контента.
+        if (section !== lastSection) {
+            lastSection = section;
+            lastContent = "";
         }
-        const tail = kids.slice(lastIncludeIdx + 1);
-        const wrap = document.createElement("div");
-        tail.forEach((n) => wrap.appendChild(n.cloneNode(true)));
-        return wrap.innerHTML;
-    }
-
-    function hasHeader() {
-        const story = document.querySelector('tw-story');
-        // Если тег tw-story не найден, возвращаем false.
-        // Если найден, проверяем, что у него НЕТ тега hide_header.
-        return story ? !story.matches('[tags~="hide_header"]') : false;
-    }
-
-    // Twine puts the CURRENT passage's tags onto <tw-story tags="…">.
-    // So "hide_header" lives there, not on <tw-passage>.
-    function isHiddenHeaderPassage() {
-        const story = document.querySelector("tw-story");
-        if (!story) return false;
-        const tags = (story.getAttribute("tags") || "").split(/\s+/);
-        return tags.indexOf("hide_header") !== -1;
-    }
-
-    function announcePassageReady(menu) {
-        document.body.classList.toggle("no-header", !!menu);
-        try {
-            window.dispatchEvent(new CustomEvent("passage:ready", { detail: { menu } }));
-        } catch (e) {}
-        // Push remembered state back into freshly-mounted hosts.
-        if (!menu) {
-            if (window.bg  && window.bg.rehome)  window.bg.rehome();
-            if (window.hp  && window.hp.rehome)  window.hp.rehome();
-            if (window.gg  && window.gg.rehome)  window.gg.rehome();
-            if (window.npc && window.npc.rehome) window.npc.rehome();
-        }
-    }
-
-    function syncFromPassage() {
-        if (!twEl) return;
-        const raw = extractStoryHtml(twEl);
+        const raw = section.innerHTML;
         if (raw === lastContent) return;
         lastContent = raw;
 
-        const menu = isHiddenHeaderPassage() || !hasHeader();
+        const payload = parsePassage(raw, section);
+        // Пропустить пустой результат — может быть промежуточная мутация.
+        if (!payload.lines.length && !payload.choices.length) return;
 
-        // Menu / hide_header — let Twine render its own text/links inside
-        // <tw-passage> directly. We just announce the state and bail.
-        if (menu) {
-            announcePassageReady(true);
-            return;
-        }
-
-        announcePassageReady(false);
-        const payload = parsePassage(raw, twEl);
-
-        // If a mini-game was just started by THIS passage's <tw-collapsed>
-        // script (or the user fired mini.start in any other way before us),
-        // hide the footer and queue the payload until completion.
+        // Мини-игра занята экраном — придержим payload до её завершения.
         if (window.mini && window.mini.isRunning()) {
             pendingPayload = payload;
             hideFooter();
@@ -476,8 +422,11 @@
     });
 
     document.addEventListener("DOMContentLoaded", init);
+    // Если скрипт грузится после DOMContentLoaded — стартуем сразу.
+    if (document.readyState !== "loading") init();
 
     window.Game = window.Game || {};
-    window.Game.rewatch = attachWatcher;
+    window.Game.rewatch  = startWatching;
     window.Game.navigate = navigate;
+    window.Game.resync   = syncFromSection;   // ручной триггер для отладки
 })();
