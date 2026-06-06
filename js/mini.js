@@ -22,6 +22,12 @@
 
     const REGISTRY = Object.create(null);
 
+    // Персистентный стор значений шкал между запусками мини-игр.
+    // Ключ — id шкалы ("hp", "wisdom", …), значение — { icon, label, value }.
+    // tutorial2 пишет `bars: ["hp", "wisdom", …]` и подхватывает то, что было
+    // на момент окончания предыдущей мини-игры.
+    const BAR_STORE = Object.create(null);
+
     const STATE = {
         running: false,
         currentId: null,
@@ -31,12 +37,23 @@
         currentSide: null,
         config: null,
 
+        // Если choice.onSwipe вернул id — следующая dealNext поднимет эту
+        // карту вместо обычного pickNextCard.
+        pendingNextId: null,
+
         dragging: false,
         startX: 0,
         startY: 0,
         dx: 0,
         dy: 0,
     };
+
+    // Шкала в конфиге может быть строкой ("hp") либо полным объектом.
+    function normBar(spec) {
+        if (typeof spec === "string") return { id: spec };
+        if (spec && typeof spec === "object" && spec.id) return spec;
+        return null;
+    }
 
     // No cached DOM. We re-resolve every time the mini-game starts (and the
     // card listeners get re-bound to whatever [data-mini-card] is live now).
@@ -81,16 +98,37 @@
 
         // Deep copy cards/bars so we don't mutate the registered config
         const cardsCopy = (cfg.cards || []).map((c) => Object.assign({}, c));
-        const barsCopy = (cfg.bars || []).map((b) => Object.assign({}, b));
+        const barsCopy  = (cfg.bars  || [])
+            .map(normBar)
+            .filter((b) => {
+                if (!b) console.warn("[mini.start] невалидная запись в bars — пропускаю");
+                return !!b;
+            })
+            .map((b) => Object.assign({}, b));
 
         STATE.config = Object.assign({}, cfg, { bars: barsCopy, cards: cardsCopy });
         STATE.currentId = id;
-        STATE.bars = barsCopy.map((b) => ({
-            id: b.id, icon: b.icon || "✦", label: b.label || b.id,
-            value: clamp(b.value ?? 100, 0, 100),
-            min: 0, max: 100,
-        }));
+        // Сшиваем конфиг шкалы с тем, что лежит в BAR_STORE с прошлого запуска.
+        // Приоритет значения: явный value в конфиге → запомненное → 100.
+        STATE.bars = barsCopy.map((b) => {
+            const stored = BAR_STORE[b.id];
+            const merged = {
+                id:    b.id,
+                icon:  b.icon  || (stored && stored.icon)  || "✦",
+                label: b.label || (stored && stored.label) || b.id,
+                value: clamp(
+                    b.value !== undefined ? b.value :
+                    stored                ? stored.value :
+                    100,
+                    0, 100
+                ),
+                min: 0, max: 100,
+            };
+            BAR_STORE[b.id] = { icon: merged.icon, label: merged.label, value: merged.value };
+            return merged;
+        });
         STATE.deck = cardsCopy.slice();
+        STATE.pendingNextId = null;
 
         STATE.running = true;
         resolveRefs();
@@ -110,6 +148,7 @@
         STATE.currentId = null;
         STATE.currentCard = null;
         STATE.currentSide = null;
+        STATE.pendingNextId = null;
         STATE.dragging = false;
         if (root) root.classList.add("mini--hidden");
         clearBarHints();
@@ -178,6 +217,7 @@
             if (!b) return;
             const prev = b.value;
             b.value = clamp(b.value + d, b.min, b.max);
+            if (BAR_STORE[id]) BAR_STORE[id].value = b.value;
             updateBarVisual(id);
             if (prev > 0 && b.value === 0 && STATE.config.onBarZero) {
                 try { STATE.config.onBarZero(id); } catch (e) { console.error(e); }
@@ -208,7 +248,19 @@
     }
 
     function dealNext() {
-        const card = pickNextCard();
+        let card = null;
+        // Если предыдущий свайп заказал конкретный id — ищем его в колоде.
+        if (STATE.pendingNextId) {
+            const wantedId = STATE.pendingNextId;
+            STATE.pendingNextId = null;
+            const idx = STATE.deck.findIndex((c) => c.id === wantedId);
+            if (idx === -1) {
+                console.warn("[mini] onSwipe → карточки с id не найдено в колоде:", wantedId);
+            } else {
+                card = STATE.deck.splice(idx, 1)[0];
+            }
+        }
+        if (!card) card = pickNextCard();
         if (!card) {
             STATE.currentCard = null;
             // Per-config callback first
@@ -258,8 +310,15 @@
         }
         if (textEl) textEl.textContent = card.text || "";
 
-        if (leftEl)  leftEl.textContent  = (card.left  && card.left.label)  || "";
-        if (rightEl) rightEl.textContent = (card.right && card.right.label) || "";
+        // Single-outcome: куда ни тяни — будет card.outcome. Подпись
+        // одна, но кладём её и в левый, и в правый слот — игрок видит
+        // реплику в любом направлении свайпа. Стилевой хук — класс
+        // is-single-outcome.
+        const single = !!card.outcome;
+        cardEl.classList.toggle("is-single-outcome", single);
+        const outcomeLabel = single ? (card.outcome.label || "") : "";
+        if (leftEl)  leftEl.textContent  = single ? outcomeLabel : ((card.left  && card.left.label)  || "");
+        if (rightEl) rightEl.textContent = single ? outcomeLabel : ((card.right && card.right.label) || "");
 
         requestAnimationFrame(() => {
             requestAnimationFrame(() => {
@@ -334,13 +393,24 @@
 
             if (swipeDirection !== STATE.currentSide) {
                 STATE.currentSide = swipeDirection;
-                // INVERTED — swiping right shows the LEFT hint
-                if (leftEl)  leftEl.classList.toggle("is-active",  swipeDirection === "right");
-                if (rightEl) rightEl.classList.toggle("is-active", swipeDirection === "left");
+                if (card.outcome) {
+                    // Куда ни тяни — одна и та же реплика, поэтому подсвечиваем
+                    // обе стороны одновременно: игрок видит outcome.label
+                    // независимо от направления свайпа.
+                    const on = !!swipeDirection;
+                    if (leftEl)  leftEl.classList.toggle("is-active",  on);
+                    if (rightEl) rightEl.classList.toggle("is-active", on);
+                    if (on) setBarHints(card.outcome.delta);
+                    else clearBarHints();
+                } else {
+                    // INVERTED — swiping right shows the LEFT hint
+                    if (leftEl)  leftEl.classList.toggle("is-active",  swipeDirection === "right");
+                    if (rightEl) rightEl.classList.toggle("is-active", swipeDirection === "left");
 
-                if (swipeDirection === "right" && card.right) setBarHints(card.right.delta);
-                else if (swipeDirection === "left" && card.left) setBarHints(card.left.delta);
-                else clearBarHints();
+                    if (swipeDirection === "right" && card.right) setBarHints(card.right.delta);
+                    else if (swipeDirection === "left" && card.left) setBarHints(card.left.delta);
+                    else clearBarHints();
+                }
             }
         };
         const onUp = () => {
@@ -350,8 +420,10 @@
 
             const card = STATE.currentCard;
             const COMMIT = 130;
-            if (card && STATE.dx >  COMMIT && card.right) commitSwipe(card, "right");
-            else if (card && STATE.dx < -COMMIT && card.left) commitSwipe(card, "left");
+            const side = STATE.dx > 0 ? "right" : "left";
+            const canCommit = card && Math.abs(STATE.dx) > COMMIT &&
+                              (card.outcome || card[side]);
+            if (canCommit) commitSwipe(card, side);
             else {
                 cardEl.style.transform = "";
                 if (leftEl)  leftEl.classList.remove("is-active");
@@ -373,7 +445,8 @@
     }
 
     function commitSwipe(card, side) {
-        const choice = card[side];
+        // single-outcome → один и тот же исход в любую сторону.
+        const choice = card.outcome || card[side];
         if (!choice) return;
 
         cardEl.classList.add(side === "left" ? "is-flying-left" : "is-flying-right");
@@ -386,6 +459,17 @@
         STATE.currentCard = null;
 
         showReaction(choice.reaction || "");
+
+        // onSwipe(state) → "cardId" | null — заказать следующую карту вне очереди.
+        if (typeof choice.onSwipe === "function") {
+            try {
+                const next = choice.onSwipe(snapshotState());
+                STATE.pendingNextId = (typeof next === "string" && next) ? next : null;
+            } catch (e) {
+                console.error("[mini] onSwipe бросил исключение:", e);
+                STATE.pendingNextId = null;
+            }
+        }
 
         setTimeout(() => {
             if (!STATE.running) return;

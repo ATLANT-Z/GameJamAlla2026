@@ -318,8 +318,17 @@
      * Возвращает live-элемент или null.
      */
     function findLiveLink({ passage, label }) {
+        // Контракт: ВЕСЬ авторский контент пассажа лежит в <section>.
+        // Если section нет — это ошибка автора, кричим в консоль.
         const section = document.querySelector("tw-passage section");
-        if (!section) return null;
+        if (!section) {
+            console.error(
+                "[main] findLiveLink: внутри <tw-passage> нет <section>! " +
+                "Заверни весь авторский текст пассажа в <section>…</section>, " +
+                "иначе ссылки и реплики не подцепятся."
+            );
+            return null;
+        }
         if (passage) {
             const esc = cssEscape(passage);
             const byAttr = section.querySelector(
@@ -338,7 +347,13 @@
     function clickLiveLink(meta) {
         const live = findLiveLink(meta);
         if (!live) {
-            console.warn("[main] клик по реплике/инлайну: не нашли live tw-link для", meta);
+            console.warn(
+                "[main] клик: не нашли live tw-link для",
+                meta,
+                "— проверь, что в пассаже есть [[" + (meta.label || "…") +
+                "|" + (meta.passage || "…") + "]] или соответствующая tw-link " +
+                "внутри <tw-passage>."
+            );
             return;
         }
         try { live.click(); }

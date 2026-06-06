@@ -45,13 +45,28 @@
    Minis (referenced by id):
        minis: {
            tutorial1: {
+               // Полная форма шкалы: { id, icon, label, value }.
+               // Короткая (для последующих туториалов): bars: ["hp", "wisdom", ...]
+               // — иконка/название/значение подхватываются из BAR_STORE.
                bars: [ { id, icon, label, value } x4 ],
                cards: [
                    {
                        id, art, text,
-                       left:  { label, delta: {barId: ±N, ...}, reaction },
-                       right: { label, delta, reaction },
-                       when:  (state) => boolean   // optional show-condition
+                       // Реакции описываются per-свайп: left / right / outcome,
+                       // а не на всю карточку. Любой из этих трёх ключей —
+                       // отдельный исход свайпа в свою сторону.
+                       //
+                       //   left:    { label, delta: {barId: ±N, ...}, reaction, onSwipe? }
+                       //   right:   { label, delta, reaction, onSwipe? }
+                       //   outcome: { label, delta, reaction, onSwipe? }
+                       //     // single-outcome: куда ни тяни — один исход.
+                       //     // label показывается в обеих боковых подсказках.
+                       //
+                       // label    — текст в .mini__side во время свайпа.
+                       // reaction — мысль Авроры после коммита (bubble снизу).
+                       // onSwipe  — (state) => "cardId" | null. Прыжок на конкретную
+                       //            следующую карточку. Нет id — warn + дальше по массиву.
+                       when: (state) => boolean,  // optional show-condition
                    },
                    ...
                ],
@@ -84,6 +99,9 @@
                 neutral: "https://ik.imagekit.io/atlantz/jam/c/aurora/aurora_neutral.png",
                 // neutral: "https://ik.imagekit.io/atlantz/jam/c/councilor/councilor_neutral.png",
             },
+            king: {
+                neutral: "https://ik.imagekit.io/atlantz/jam/c/aurora/aurora_dress.png",
+            },
             // Override / extend emotions here. Example:
             // aurora: { dreamy: "img/aurora_dreamy.png" },
             // knight: { proud:  "img/knight_proud.png"  },
@@ -96,6 +114,7 @@
            ------------------------------------------------------------ */
         npcByName: {
             "ЧЛЕН СОВЕТА": "councilor",
+            "ОТЕЦ": "king",
             "РЫЦАРЬ": "knight",
             "СЛУЖАНКА": "maid",
             "КОТ": "cat",
@@ -163,6 +182,75 @@
                             reaction: "…может, он прав."
                         },
                     },
+                ],
+            },
+
+            /* ---------- TUTORIAL 2 — разговор с отцом про варваров ----------
+               Демонстрирует:
+                 1. bars: ["hp", ...] — короткая запись, значения подхватываются
+                    из предыдущей мини-игры (BAR_STORE внутри mini.js).
+                 2. outcome: {...} — карточка без выбора. Куда ни тяни — один и
+                    тот же исход. На карте появляется маркер ↔.
+                 3. onSwipe(state) → "cardId" — необязательный прыжок на конкретную
+                    следующую карточку. Если id нет в колоде — warn + дальше по
+                    массиву. См. закомментированный пример внутри father_safety.
+               -------------------------------------------------------------- */
+            tutorial2: {
+                bars: ["hp", "wisdom", "pride", "council"],
+                cards: [
+                    {
+                        id: "father_war",
+                        art: "👑",
+                        text: "Предположим, варвары угрожают одной из наших провинций. Что ты сделаешь?",
+                        outcome: {
+                            label: "Отправлю рыцарей!",
+                            delta: {pride: +10, wisdom: -5, council: -5},
+                            reaction: "Да побольше!",
+                        },
+                    },
+                    {
+                        id: "father_howmany",
+                        art: "⚔",
+                        text: "Сколько рыцарей ты отправишь?",
+                        outcome: {
+                            label: "Всех!",
+                            delta: {pride: +10, council: -10, hp: -5},
+                        },
+                    },
+                    {
+                        id: "father_tactic",
+                        art: "🗺",
+                        text: "Аврора, варваров много. Какова твоя тактика?",
+                        outcome: {
+                            label: "Пришёл, увидел, победил",
+                            delta: {wisdom: -15, pride: +10, council: -10},
+                            reaction: "Зачем тактика?",
+                        },
+                    },
+                    {
+                        id: "father_safety",
+                        art: "🛡",
+                        text: "Это невозможно. Ты думаешь о безопасности своих людей?",
+                        outcome: {
+                            label: "Они рождены, чтобы служить короне. Ты просто слаб!",
+                            delta: {wisdom: -10, pride: +15, council: -15, hp: -10},
+                            reaction: "В чём проблема?",
+                            // Пример прыжка по условию (раскомментируй, если нужен):
+                            // onSwipe: (state) => state.pride > 90 ? "father_breakdown" : null,
+                        },
+                    },
+                    // Пример опциональной "branching" карты — едет, только если
+                    // её попросил onSwipe выше. Иначе просто остаётся в колоде
+                    // и завершит туториал по обычному порядку.
+                    // {
+                    //     id: "father_breakdown",
+                    //     art: "💔",
+                    //     text: "…Аврора. Что я упустил в твоём воспитании?",
+                    //     outcome: {
+                    //         delta: {hp: -20, council: -10},
+                    //         reaction: "Что? Я просто говорю правду…",
+                    //     },
+                    // },
                 ],
             },
         },
