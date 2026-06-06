@@ -1,0 +1,126 @@
+/* ============================================================
+   hp.css — moonlight thread under the dialog
+   Lives inside .state (flex sibling of .dialog), so NO absolute
+   positioning here.
+   ============================================================ */
+
+.hp {
+    position: relative;
+    flex: 1;
+    height: 18px;
+    padding: 4px 14px;
+    background:
+        linear-gradient(180deg, rgba(12, 18, 48, .82), rgba(6, 10, 28, .88));
+    border: 1px solid var(--line-gold);
+    border-radius: 999px;
+    box-shadow:
+        var(--sheen-inner),
+        0 3px 12px rgba(0, 0, 0, .45),
+        var(--glow-moon);
+    display: flex;
+    align-items: center;
+}
+
+.hp__label {
+    position: absolute;
+    top: -11px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 9px;
+    letter-spacing: .34em;
+    text-transform: uppercase;
+    color: var(--c-gold-0);
+    background: linear-gradient(180deg, rgba(20, 28, 64, .95), rgba(10, 18, 48, .95));
+    border: 1px solid var(--line-gold);
+    border-radius: 2px;
+    padding: 2px 9px;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, .55), var(--glow-gold);
+    text-shadow: 0 0 6px rgba(255, 242, 193, .4);
+    white-space: nowrap;
+}
+
+.hp__track {
+    position: relative;
+    height: 6px;
+    flex: 1;
+    background: linear-gradient(180deg, rgba(0, 0, 0, .7), rgba(0, 0, 0, .35));
+    border-radius: 999px;
+    overflow: hidden;
+    box-shadow: 0 0 0 1px rgba(207, 226, 255, .07) inset;
+}
+
+.hp__fill {
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 100%;
+    border-radius: 999px;
+    background:
+        linear-gradient(90deg, #ffffff 0%, #eaf2ff 60%, #cfe2ff 100%);
+    box-shadow:
+        0 0 14px rgba(207, 226, 255, .75),
+        0 0 28px rgba(110, 168, 255, .40),
+        0 0 3px rgba(255, 255, 255, .9) inset;
+    transition: width 700ms var(--ease-spring), background 400ms var(--ease-soft), filter 400ms var(--ease-soft);
+}
+
+.hp__fill[data-mood="low"] {
+    background: linear-gradient(90deg, #cfe2ff, #9ec3ff);
+    filter: drop-shadow(0 0 8px rgba(158, 195, 255, .65));
+}
+.hp__fill[data-mood="critical"] {
+    background: linear-gradient(90deg, #9ec3ff, #6f8fd9);
+    filter: drop-shadow(0 0 12px rgba(158, 195, 255, .85));
+    animation: hp-pulse 1.4s var(--ease-soft) infinite;
+}
+@keyframes hp-pulse {
+    0%, 100% { filter: drop-shadow(0 0 10px rgba(158,195,255,.6)); }
+    50%      { filter: drop-shadow(0 0 18px rgba(184,162,255,.95)); }
+}
+
+.hp__shimmer {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(110deg,
+        transparent 0%,
+        rgba(255, 255, 255, 0) 30%,
+        rgba(255, 255, 255, .5) 50%,
+        rgba(255, 255, 255, 0) 70%,
+        transparent 100%);
+    mix-blend-mode: screen;
+    transform: translateX(-100%);
+    animation: shimmer-sweep 4.5s linear infinite;
+    pointer-events: none;
+}
+
+/* ============================================================
+   DROPS (living water)
+   ============================================================ */
+.drops {
+    display: flex;
+    gap: 8px;
+    padding: 2px 4px;
+}
+.drop {
+    width: 18px;
+    height: 22px;
+    -webkit-mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 22 28"><path d="M11 1 C11 1 2 14 2 19 A9 9 0 0 0 20 19 C20 14 11 1 11 1 Z" fill="black"/></svg>') no-repeat center / contain;
+            mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 22 28"><path d="M11 1 C11 1 2 14 2 19 A9 9 0 0 0 20 19 C20 14 11 1 11 1 Z" fill="black"/></svg>') no-repeat center / contain;
+    background: linear-gradient(180deg, rgba(212, 166, 74, .12), rgba(20, 28, 60, .85));
+    transition: background 600ms var(--ease-soft), filter 600ms var(--ease-soft);
+}
+.drop.is-filled {
+    background:
+        radial-gradient(circle at 35% 30%, #ffffff, transparent 45%),
+        linear-gradient(180deg, #eaf2ff 0%, #9ec3ff 70%, #5e7ec0 100%);
+    filter:
+        drop-shadow(0 0 10px rgba(158, 195, 255, .85))
+        drop-shadow(0 0 18px rgba(184, 162, 255, .45));
+    animation: drop-pop 700ms var(--ease-out-back);
+}
+@keyframes drop-pop {
+    0%   { transform: scale(.5) rotate(-8deg); opacity: 0; }
+    60%  { transform: scale(1.18) rotate(4deg); opacity: 1; }
+    100% { transform: scale(1)   rotate(0);    opacity: 1; }
+}

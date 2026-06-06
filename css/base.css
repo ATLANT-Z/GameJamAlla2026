@@ -1,0 +1,145 @@
+/* ============================================================
+   base.css — design tokens, fonts, global utilities
+   Theme: arcane-fantasy, MOON-LIGHT, lacy.
+   Mantra: 1px lines + soft glow > thick borders.
+   ============================================================ */
+
+:root {
+    /* ---------- Palette ---------- */
+    --c-night-0:        #03050f;
+    --c-night-1:        #060a1c;
+    --c-night-2:        #0c1230;
+    --c-night-3:        #14204a;
+
+    --c-moon:           #e7efff;
+    --c-moon-2:         #cfe2ff;
+    --c-moon-3:         #9ec3ff;
+    --c-aurora:         #6fa8ff;
+    --c-arcane:         #b8a2ff;
+
+    --c-gold-0:         #fff2c1;
+    --c-gold-1:         #f0d574;
+    --c-gold-2:         #d4a64a;
+    --c-gold-3:         #8a6c2e;
+
+    --c-mist:           #d6e1ff;
+    --c-text:           #eaf2ff;
+    --c-text-dim:       #b9c5e6;
+
+    /* Hair-line — 1px conventional border tinted gold */
+    --line-gold:        rgba(212, 166, 74, .55);
+    --line-gold-strong: rgba(255, 242, 193, .80);
+    --line-moon:        rgba(207, 226, 255, .35);
+
+    /* Glow tokens — use everywhere, soft and layered */
+    --glow-moon:        0 0 18px rgba(158, 195, 255, .30);
+    --glow-moon-strong: 0 0 28px rgba(158, 195, 255, .55), 0 0 10px rgba(255, 255, 255, .35);
+    --glow-gold:        0 0 14px rgba(212, 166, 74, .30);
+    --glow-gold-strong: 0 0 22px rgba(240, 213, 116, .55), 0 0 6px rgba(255, 242, 193, .35);
+    --glow-arcane:      0 0 18px rgba(184, 162, 255, .30);
+
+    /* Inner sheen — almost invisible film of moonlight on dark glass */
+    --sheen-inner:      0 0 0 1px rgba(255, 255, 255, .04) inset, 0 1px 0 rgba(255, 255, 255, .04) inset;
+
+    /* ---------- Typography ---------- */
+    --font-display: 'Cinzel Decorative', 'Times New Roman', serif;
+    --font-heading: 'Marcellus', 'Cinzel Decorative', serif;
+    --font-body:    'Cormorant Garamond', Georgia, serif;
+    --font-script:  'Tangerine', 'Cormorant Garamond', serif;
+
+    /* ---------- Layout ---------- */
+    --footer-width: min(960px, 88vw);
+    --footer-bottom: 3vh;
+
+    /* NPC stack on the right side of the stage */
+    --npc-stack-width: 28vw;
+    --npc-stack-min-width: 320px;
+
+    /* Dialog inner sizing (used by dialog.css fallbacks) */
+    --dialog-min-height: 160px;
+
+    /* ---------- Easing ---------- */
+    --ease-soft:     cubic-bezier(.4, .12, .2, 1);
+    --ease-spring:   cubic-bezier(.34, 1.32, .64, 1);
+    --ease-out-back: cubic-bezier(.18, .89, .32, 1.28);
+
+    /* Reactive state */
+    --gg-opacity: 1;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    overflow: hidden;
+    background: radial-gradient(ellipse at 50% 110%, var(--c-night-3), var(--c-night-0));
+    color: var(--c-text);
+    font-family: var(--font-body);
+    font-size: 19px;
+    line-height: 1.5;
+    user-select: none;
+    -webkit-font-smoothing: antialiased;
+    cursor: default;
+}
+
+img { user-select: none; -webkit-user-drag: none; }
+
+/* Hide the real <tw-passage> */
+.twine-hidden {
+    position: fixed !important;
+    left: -99999px !important;
+    top: -99999px !important;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+/* ---------- Starfield ---------- */
+.starfield {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 1;
+    background:
+        radial-gradient(1.2px 1.2px at 12% 18%, rgba(255,255,255,.85), transparent 60%),
+        radial-gradient(1px   1px   at 35% 70%, rgba(255,255,255,.55), transparent 60%),
+        radial-gradient(1.6px 1.6px at 60% 35%, rgba(207,226,255,.85), transparent 60%),
+        radial-gradient(1px   1px   at 78% 80%, rgba(255,255,255,.55), transparent 60%),
+        radial-gradient(1.3px 1.3px at 88% 22%, rgba(240,213,116,.6),  transparent 60%),
+        radial-gradient(1px   1px   at 20% 50%, rgba(207,226,255,.45), transparent 60%),
+        radial-gradient(1.3px 1.3px at 50% 90%, rgba(255,255,255,.55), transparent 60%),
+        radial-gradient(1.6px 1.6px at 8%  62%, rgba(184,162,255,.45), transparent 60%),
+        radial-gradient(1px   1px   at 92% 50%, rgba(207,226,255,.5),  transparent 60%);
+    background-repeat: no-repeat;
+    animation: starfield-twinkle 5s var(--ease-soft) infinite alternate;
+}
+
+@keyframes starfield-twinkle {
+    from { opacity: .5; }
+    to   { opacity: .95; }
+}
+
+/* ---------- Shared keyframes ---------- */
+@keyframes aura-breathe {
+    0%, 100% { opacity: .55; transform: scale(1); }
+    50%      { opacity: 1;   transform: scale(1.03); }
+}
+@keyframes shimmer-sweep {
+    0%   { transform: translateX(-120%); }
+    100% { transform: translateX(120%);  }
+}
+@keyframes fade-in-up {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fade-out-up {
+    from { opacity: 1; transform: translateY(0); }
+    to   { opacity: 0; transform: translateY(-8px); }
+}
+@keyframes caret-blink {
+    from { opacity: .15; }
+    to   { opacity: 1; }
+}

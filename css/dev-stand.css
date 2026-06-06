@@ -1,0 +1,70 @@
+/* ============================================================
+   dev-stand.css — tiny dev panel to fire API calls.
+   Hidden in production: delete the script tag, the CSS is harmless.
+   ============================================================ */
+
+.dev-stand {
+    position: fixed;
+    top: 8px;
+    left: 8px;
+    z-index: 99;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 8px 10px;
+    background: rgba(2, 4, 16, .8);
+    border: 1px solid rgba(212, 166, 74, .3);
+    border-radius: 6px;
+    backdrop-filter: blur(6px);
+    font-family: var(--font-heading);
+    font-size: 11px;
+    letter-spacing: .04em;
+    color: var(--c-text-dim);
+    max-width: 260px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, .6);
+    opacity: .7;
+    transition: opacity 200ms var(--ease-soft);
+}
+.dev-stand:hover { opacity: 1; }
+
+.dev-stand__title {
+    font-family: var(--font-display);
+    font-size: 9px;
+    letter-spacing: .3em;
+    color: var(--c-gold-0);
+    text-transform: uppercase;
+    margin-bottom: 4px;
+    opacity: .8;
+}
+
+.dev-stand__row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    align-items: center;
+}
+.dev-stand__row > .dev-stand__hint {
+    font-family: var(--font-body);
+    font-size: 11px;
+    color: var(--c-text-dim);
+    margin-right: 4px;
+    opacity: .6;
+    min-width: 36px;
+}
+
+.dev-stand button {
+    appearance: none;
+    cursor: pointer;
+    font: inherit;
+    color: var(--c-text);
+    background: rgba(20, 32, 74, .9);
+    border: 1px solid rgba(212, 166, 74, .35);
+    border-radius: 3px;
+    padding: 3px 7px;
+    transition: background 160ms, border-color 160ms;
+}
+.dev-stand button:hover {
+    background: rgba(40, 56, 110, .95);
+    border-color: var(--line-gold-strong);
+    color: var(--c-gold-0);
+}

@@ -1,0 +1,40 @@
+/* ============================================================
+   fireflies.css — drifting motes of light around the scene
+   Each span uses --fx/--fy as a start anchor (% of viewport),
+   --dur for orbit period, --delay for phase.
+   ============================================================ */
+
+.fireflies span {
+    position: absolute;
+    left: var(--fx, 50%);
+    top:  var(--fy, 50%);
+    width:  5px;
+    height: 5px;
+    border-radius: 50%;
+    background:
+        radial-gradient(circle at 50% 50%, #fff8d8, rgba(255, 242, 193, .6) 40%, transparent 70%);
+    box-shadow:
+        0 0 8px rgba(255, 242, 193, .85),
+        0 0 18px rgba(240, 213, 116, .55),
+        0 0 36px rgba(184, 162, 255, .35);
+    opacity: 0;
+    animation:
+        firefly-orbit var(--dur, 16s) ease-in-out infinite,
+        firefly-blink calc(var(--dur, 16s) / 2) ease-in-out infinite;
+    animation-delay: var(--delay, 0s);
+}
+
+@keyframes firefly-orbit {
+    0%   { transform: translate(0,       0);    }
+    25%  { transform: translate( 40px, -28px); }
+    50%  { transform: translate( 70px,  10px); }
+    75%  { transform: translate( 24px,  44px); }
+    100% { transform: translate(0,       0);    }
+}
+
+@keyframes firefly-blink {
+    0%, 100% { opacity: 0;   }
+    20%      { opacity: .25; }
+    50%      { opacity: .95; }
+    80%      { opacity: .35; }
+}

@@ -1,0 +1,38 @@
+/* ============================================================
+   stage.css — z-stack only. Layout now lives in component files.
+   ============================================================ */
+
+.stage {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+}
+
+.bg            { position: fixed; inset: 0; z-index: 2; pointer-events: none; }
+.cast          { position: fixed; inset: 0; z-index: 3; pointer-events: none; }
+.fireflies     { position: fixed; inset: 0; z-index: 3; pointer-events: none; }
+
+.sword-watcher { position: fixed; z-index: 4; pointer-events: none;
+                 top: 7%; left: 50%; width: 56px; height: 220px;
+                 transform: translate(calc(-50% + var(--px, 0px)), var(--py, 0px));
+                 opacity: .28;
+                 filter: drop-shadow(0 0 10px rgba(207, 226, 255, .35)); }
+
+.sword-watcher__svg {
+    width: 100%; height: 100%;
+    animation: sword-float 9s var(--ease-soft) infinite alternate;
+    transform-origin: 50% 12%;
+}
+
+.footer-dialog { position: fixed; z-index: 6; pointer-events: auto;
+                 left: 50%; bottom: var(--footer-bottom);
+                 transform: translateX(-50%);
+                 width: var(--footer-width); }
+
+.mini          { position: fixed; inset: 0; z-index: 7; pointer-events: auto; }
+
+@keyframes sword-float {
+    from { transform: translateY(0)     rotate(-2deg); }
+    to   { transform: translateY(-14px) rotate( 2deg); }
+}

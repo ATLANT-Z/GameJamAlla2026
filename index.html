@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Пожалуйста, пойдём со мной</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Marcellus&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Tangerine:wght@700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/stage.css">
+    <link rel="stylesheet" href="css/background.css">
+    <link rel="stylesheet" href="css/sprites.css">
+    <link rel="stylesheet" href="css/fireflies.css">
+    <link rel="stylesheet" href="css/dialog.css">
+    <link rel="stylesheet" href="css/hp.css">
+    <link rel="stylesheet" href="css/footer.css">
+    <link rel="stylesheet" href="css/mini.css">
+    <link rel="stylesheet" href="css/dev-stand.css">
+</head>
+<body class="stage">
+
+<!-- Decorative starfield + fireflies (atmosphere) -->
+<div class="starfield" aria-hidden="true"></div>
+<div class="fireflies" aria-hidden="true">
+    <span style="--fx:12%; --fy:65%; --dur:14s; --delay:0s"></span>
+    <span style="--fx:28%; --fy:30%; --dur:18s; --delay:-3s"></span>
+    <span style="--fx:48%; --fy:75%; --dur:16s; --delay:-6s"></span>
+    <span style="--fx:62%; --fy:22%; --dur:21s; --delay:-2s"></span>
+    <span style="--fx:78%; --fy:58%; --dur:17s; --delay:-9s"></span>
+    <span style="--fx:88%; --fy:35%; --dur:13s; --delay:-5s"></span>
+    <span style="--fx:34%; --fy:88%; --dur:19s; --delay:-7s"></span>
+    <span style="--fx:8%;  --fy:42%; --dur:15s; --delay:-4s"></span>
+</div>
+
+<!-- Background layers (far + near). Filled by bg.set(id) -->
+<div class="bg" aria-hidden="true">
+    <div class="bg__layer bg__layer--far"  data-parallax="6"  data-bg-far></div>
+    <div class="bg__layer bg__layer--near" data-parallax="14" data-bg-near></div>
+    <div class="bg__vignette"></div>
+</div>
+
+<!-- Sprite stage: GG on the left, NPC stack on the right -->
+<div class="cast" aria-hidden="true">
+    <div class="cast__gg"  data-parallax="36" data-gg-slot></div>
+    <div class="cast__npcs" data-npc-stack></div>
+</div>
+
+<!-- Floating sword observer -->
+<div class="sword-watcher" data-parallax="20" aria-hidden="true">
+    <svg viewBox="0 0 64 256" xmlns="http://www.w3.org/2000/svg" class="sword-watcher__svg">
+        <defs>
+            <linearGradient id="bladeGrad" x1="0" x2="0" y1="0" y2="1">
+                <stop offset="0%"  stop-color="#dfe9ff"/>
+                <stop offset="100%" stop-color="#7c8ec0"/>
+            </linearGradient>
+        </defs>
+        <path d="M32 4 L40 180 L32 210 L24 180 Z" fill="url(#bladeGrad)" stroke="#cfe2ff" stroke-width="0.6"/>
+        <rect x="14" y="178" width="36" height="5" fill="#d4a64a" stroke="#7c5a1f" stroke-width=".5"/>
+        <rect x="29" y="183" width="6" height="28" fill="#a47a32"/>
+        <circle cx="32" cy="218" r="5" fill="#d4a64a" stroke="#7c5a1f" stroke-width=".5"/>
+    </svg>
+</div>
+
+<!--
+    The lower band — one container, three flex children:
+        1. .choices   — buttons row that appears ABOVE the dialog
+        2. .dialog    — speaker banner + body text
+        3. .state     — HP thread (visible only during trials)
+    All animated together when the passage changes.
+-->
+<div class="footer-dialog" data-footer>
+
+    <!-- Choices row (above the dialog) -->
+    <div class="choices" data-choices></div>
+
+    <!-- Dialog card -->
+    <div class="dialog" data-dialog>
+        <div class="dialog__speaker" data-dialog-speaker></div>
+        <div class="dialog__corner dialog__corner--tl"></div>
+        <div class="dialog__corner dialog__corner--tr"></div>
+        <div class="dialog__corner dialog__corner--bl"></div>
+        <div class="dialog__corner dialog__corner--br"></div>
+        <div class="dialog__text" data-dialog-text></div>
+        <div class="dialog__hint" data-dialog-hint>▾</div>
+    </div>
+
+    <!-- State row (HP + drops) -->
+    <div class="state state--hidden" data-state>
+        <div class="hp" data-hp>
+            <div class="hp__label">связь&nbsp;с&nbsp;телом</div>
+            <div class="hp__track">
+                <div class="hp__fill" data-hp-fill></div>
+                <div class="hp__shimmer"></div>
+            </div>
+        </div>
+        <div class="drops" data-drops>
+            <div class="drop" data-drop-index="0"></div>
+            <div class="drop" data-drop-index="1"></div>
+            <div class="drop" data-drop-index="2"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Mini-game (Reigns-style). Hidden by default. Driven by mini.config + mini.start. -->
+<div class="mini mini--hidden" data-mini>
+    <div class="mini__bars" data-mini-bars></div>
+    <div class="mini__stage">
+        <div class="mini__side mini__side--left"  data-mini-side="left"></div>
+        <div class="mini__side mini__side--right" data-mini-side="right"></div>
+        <div class="mini__card" data-mini-card>
+            <div class="mini__card-glow"></div>
+            <div class="mini__card-art"  data-mini-card-art></div>
+            <div class="mini__card-text" data-mini-card-text></div>
+        </div>
+    </div>
+    <div class="mini__reaction" data-mini-reaction></div>
+</div>
+
+<!--
+  Twine renders into <tw-passage>. Configurable via Game.config.passageSelector.
+  Hidden visually; main.js parses it and feeds the dialog.
+-->
+<tw-passage class="twine-hidden" data-passage=""></tw-passage>
+
+<!-- =========================== SCRIPTS =========================== -->
+<script src="js/config.js"></script>
+<script src="js/registry.js"></script>
+<script src="js/background.js"></script>
+<script src="js/sprites.js"></script>
+<script src="js/hp.js"></script>
+<script src="js/dialog.js"></script>
+<script src="js/parallax.js"></script>
+<script src="js/mini.js"></script>
+<script src="js/main.js"></script>
+
+<!-- DEV: tiny panel to fire API calls without Twine. Delete for release. -->
+<script src="js/dev-stand.js"></script>
+
+</body>
+</html>
