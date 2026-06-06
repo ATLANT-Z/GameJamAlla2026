@@ -134,6 +134,11 @@
             far:  svgDataUri(svgBg("spirit_far")),
             near: svgDataUri(svgBg("spirit_near")),
         });
+
+        bgRegister("castle", {
+            far: "https://ik.imagekit.io/atlantz/jam/castle_far.jpg",
+            near: "https://ik.imagekit.io/atlantz/jam/castle_near.png",
+        });
         bgRegister("castle_dusk", {
             far:  svgDataUri(svgBg("spirit_far")),
             near: svgDataUri(svgBg("spirit_near")),
