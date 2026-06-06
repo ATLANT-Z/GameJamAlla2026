@@ -106,10 +106,10 @@
     }
 
     function hasHeader() {
-        // Headers are the [data-footer] (dialog), [data-mini] (cards),
-        // [data-cast] (sprites), etc. If footer is absent we treat the
-        // passage as "menu/no-header" — Twine renders its raw text directly.
-        return !!document.querySelector("[data-footer]");
+        const story = document.querySelector('tw-story');
+        // Если тег tw-story не найден, возвращаем false.
+        // Если найден, проверяем, что у него НЕТ тега hide_header.
+        return story ? !story.matches('[tags~="hide_header"]') : false;
     }
 
     // Twine puts the CURRENT passage's tags onto <tw-story tags="…">.

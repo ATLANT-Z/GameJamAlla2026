@@ -98,43 +98,32 @@ img { user-select: none; -webkit-user-drag: none; }
     pointer-events: none;
 }
 
-/* ============================================================
-   TW-PASSAGE — Twine's live passage.
-   Normal mode (no <body class="no-header">):
-       Our headers (footer-dialog, mini, cast, bg, starfield) render
-       inside <tw-passage> via <tw-include>. The raw story text/links
-       that follow the headers are parsed by main.js into our dialog,
-       so we hide them at the source.
-   Menu mode (<body class="no-header">):
-       We disengage entirely — Twine paints natively, the author
-       styles the menu themselves.
-   ============================================================ */
 tw-story  { position: static; }
 
 /* --- Normal mode: hide loose story text/links --- */
-body:not(.no-header) tw-passage {
+tw-story:not([tags="hide_header"]) tw-passage {
     display: block;
     color: transparent;          /* hide loose text nodes */
     user-select: none;
     pointer-events: none;
 }
 /* Re-show content inside our header blocks */
-body:not(.no-header) tw-passage > tw-sidebar,
-body:not(.no-header) tw-passage > tw-include,
-body:not(.no-header) tw-passage > tw-collapsed,
-body:not(.no-header) tw-passage tw-include * {
+tw-story:not([tags="hide_header"]) tw-passage > tw-sidebar,
+tw-story:not([tags="hide_header"]) tw-passage > tw-include,
+tw-story:not([tags="hide_header"]) tw-passage > tw-collapsed,
+tw-story:not([tags="hide_header"]) tw-passage tw-include * {
     color: var(--c-text);
     pointer-events: auto;
 }
 /* Kill loose <br> / consecutive-br between replies */
-body:not(.no-header) tw-passage > br,
-body:not(.no-header) tw-passage > tw-consecutive-br {
+tw-story:not([tags="hide_header"]) tw-passage > br,
+tw-story:not([tags="hide_header"]) tw-passage > tw-consecutive-br {
     display: none;
 }
 /* tw-link and tw-expression in the story tail are clickable via JS
    (.click() still works) but must not paint visually */
-body:not(.no-header) tw-passage > tw-link,
-body:not(.no-header) tw-passage > tw-expression {
+tw-story:not([tags="hide_header"]) tw-passage > tw-link,
+tw-story:not([tags="hide_header"]) tw-passage > tw-expression {
     display: none;
 }
 
