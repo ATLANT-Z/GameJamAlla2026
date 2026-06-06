@@ -37,12 +37,6 @@
         choices: $("[data-choices]"),
     });
 
-    function init() {
-        // Global delegation — works regardless of whether [data-dialog]
-        // exists at boot, and survives passage remounts.
-        document.addEventListener("click", onDialogClick);
-    }
-
     function onDialogClick(ev) {
         const dlg = ev.target.closest && ev.target.closest("[data-dialog]");
         if (!dlg) return;
@@ -97,6 +91,16 @@
         if (token !== renderToken) return;
         const line = currentLines[currentIndex];
         if (!line) return;
+
+        // Notify subscribers (speakers.js auto-shows NPCs etc.)
+        try {
+            window.dispatchEvent(new CustomEvent("dialog:line", { detail: {
+                speaker: line.speaker || "",
+                html:    line.html    || "",
+                index:   currentIndex,
+                total:   currentLines.length,
+            }}));
+        } catch (e) {}
 
         const { speaker, hint, text } = refs();
         if (speaker) speaker.textContent = line.speaker || "";
@@ -280,7 +284,9 @@
     function skip() { skipRequested = true; }
     function isTyping() { return typing; }
 
-    document.addEventListener("DOMContentLoaded", init);
+    // Bind click handler eagerly — DOMContentLoaded may have already fired
+    // by the time this script runs (Twine inlines scripts after body parse).
+    document.addEventListener("click", onDialogClick);
 
     window.dialog = Object.assign(window.dialog || {}, {
         render,

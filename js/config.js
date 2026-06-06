@@ -17,7 +17,11 @@
     const Game = {
         config: {
             passageSelector: "tw-passage",
+            // Отображаемое имя ГГ — пишется в плашке говорящего, мыслях и т.п.
             protagonist:     "Аврора",
+            // Ключ в реестре спрайтов: gg.emj("neutral") → `${protagonistKey}_neutral`.
+            // Меняй вместе с реестром, если ГГ не Аврора.
+            protagonistKey:  "aurora",
             typewriterCps:   52,
             skipOnClick:     true,
             passageOutMs:    220,
@@ -51,8 +55,12 @@
 
     window.Game = Game;
 
-    // Auto-apply GameConfig at boot
-    document.addEventListener("DOMContentLoaded", () => {
-        if (window.GameConfig) Game.applyConfig(window.GameConfig);
-    });
+    // Auto-apply GameConfig at boot — works whether DOMContentLoaded
+    // has already fired or not.
+    function applyNow() { if (window.GameConfig) Game.applyConfig(window.GameConfig); }
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", applyNow);
+    } else {
+        applyNow();
+    }
 })();

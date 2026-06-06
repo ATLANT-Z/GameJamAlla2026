@@ -101,6 +101,14 @@
         // Пропустить пустой результат — может быть промежуточная мутация.
         if (!payload.lines.length && !payload.choices.length) return;
 
+        // Шапки могли быть только что (пере)смонтированы — вернуть туда
+        // ГГ / NPC / фон / HP. Идемпотентно: если ничего не изменилось,
+        // эти функции ничего не делают.
+        if (window.gg  && window.gg.rehome)  window.gg.rehome();
+        if (window.npc && window.npc.rehome) window.npc.rehome();
+        if (window.bg  && window.bg.rehome)  window.bg.rehome();
+        if (window.hp  && window.hp.rehome)  window.hp.rehome();
+
         // Мини-игра занята экраном — придержим payload до её завершения.
         if (window.mini && window.mini.isRunning()) {
             pendingPayload = payload;

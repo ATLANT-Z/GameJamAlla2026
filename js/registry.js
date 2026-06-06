@@ -119,11 +119,12 @@
             spriteRegister("aurora_" + mood, { src: svgDataUri(svgGirl(mood)) });
         });
 
-        // Knight, Maid, Cat (NPC)
+        // Knight, Maid, Cat, Councilor (NPC) — плейсхолдеры
         [
-            ["knight", "neutral"], ["knight", "sad"],
-            ["maid",   "neutral"], ["maid",   "sad"],
-            ["cat",    "neutral"], ["cat",    "sad"],
+            ["knight",    "neutral"], ["knight",    "sad"],
+            ["maid",      "neutral"], ["maid",      "sad"],
+            ["cat",       "neutral"], ["cat",       "sad"],
+            ["councilor", "neutral"], ["councilor", "sad"],
         ].forEach(([kind, mood]) => {
             spriteRegister(kind + "_" + mood, { src: svgDataUri(svgNpc(kind, mood)) });
         });

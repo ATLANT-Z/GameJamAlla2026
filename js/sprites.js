@@ -91,7 +91,9 @@
             if (!root) return;
             lastMood = suffix;
             if (currentEl && currentEl.parentNode !== root) currentEl = null;
-            const family = (window.Game && window.Game.config.protagonist) || "aurora";
+            // Используем protagonistKey (ключ реестра), а не protagonist (имя для UI).
+            const cfg = (window.Game && window.Game.config) || {};
+            const family = cfg.protagonistKey || cfg.protagonist || "aurora";
             const fullId = resolveFullId(family, suffix);
 
             const entry = window.sprites.get(fullId);
@@ -128,16 +130,13 @@
         }
 
         // Re-mount sprite into a freshly-rendered slot (after passage swap).
+        // Если ничего ещё не показывали — поставить neutral по умолчанию.
         function rehome() {
             const slot = ensureSlot();
             if (!slot) return;
-            // already in current slot — nothing to do
             if (currentEl && currentEl.parentNode === slot) return;
-            // slot reappeared but we lost our DOM element — re-mount last mood
-            if (lastMood) {
-                currentEl = null;
-                emj(lastMood);
-            }
+            currentEl = null;
+            emj(lastMood || "neutral");
         }
 
         return {
