@@ -77,9 +77,8 @@
         requestAnimationFrame(tick);
     }
 
-    document.addEventListener("DOMContentLoaded", init);
-
     window.parallax = Object.assign(window.parallax || {}, {
         refresh: collect,
+        init,
     });
 })();

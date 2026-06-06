@@ -16,7 +16,7 @@
 .cast__gg {
     position: absolute;
     left: 2vw;
-    bottom: 0;
+    bottom: -7%;
     width: 30vw;
     max-width: 460px;
     height: 80vh;
@@ -60,7 +60,7 @@
 .cast__npcs {
     position: absolute;
     right: 0;
-    bottom: 0;
+    bottom: -7%;
     width: var(--npc-stack-width);
     min-width: var(--npc-stack-min-width);
     height: 75vh;

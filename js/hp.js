@@ -57,7 +57,10 @@
     }
 
     function show() { STATE.hidden = false; render(); }
-    function hide() { STATE.hidden = true;  render(); }
+    function hide() {
+        STATE.hidden = true;
+        render();
+    }
     function toggle(v) {
         if (v === undefined) STATE.hidden = !STATE.hidden;
         else STATE.hidden = !v;
@@ -74,6 +77,9 @@
         rehome,
         value: () => STATE.value,
         max:   () => STATE.max,
+        init() {
+            return { value: STATE.value, max: STATE.max, hidden: STATE.hidden };
+        },
     });
 
     /* ---------- drops ---------- */

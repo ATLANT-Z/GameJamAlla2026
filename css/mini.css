@@ -123,7 +123,7 @@
     position: relative;
     flex: 1;
     display: grid;
-    grid-auto-flow: column;
+    grid-template-columns: 1fr auto 1fr;
     place-items: center;
     perspective: 1200px;
 }
@@ -146,8 +146,8 @@
         0 0 10px rgba(255, 242, 193, .85),
         0 0 22px rgba(255, 242, 193, .45),
         0 0 36px rgba(184, 162, 255, .35),
-        0 3px 0 rgba(0, 0, 0, .6),
-        0 6px 14px rgba(0, 0, 0, .55);
+        0 3px 5px rgba(0, 0, 0, .6),
+        0 6px 14px rgba(0, 0, 0, .8);
     opacity: 0;
     pointer-events: none;
     background: transparent;

@@ -53,7 +53,10 @@
         }
         _backgrounds[id] = entry;
     }
-    function bgGet(id) { return _backgrounds[id] || null; }
+    function bgGet(id) {
+        console.log(id, _backgrounds)
+        return _backgrounds[id] || null;
+    }
 
     // ----- Inline SVG placeholders -----
     // Plain dark rectangle with a thin gold outline + a tiny label.
@@ -113,10 +116,14 @@
     }
 
     // ----- Auto-seed default placeholders -----
+    // Не затирает уже зарегистрированный id — порядок boot.js
+    // (registry vs config) не влияет на юзерские override-ы.
+    function seedSprite(id, entry) { if (!_sprites[id]) spriteRegister(id, entry); }
+    function seedBg(id, entry)     { if (!_backgrounds[id]) bgRegister(id, entry); }
     function seedDefaults() {
         // Aurora (GG)
         ["neutral", "sad", "happy", "angry", "scared"].forEach((mood) => {
-            spriteRegister("aurora_" + mood, { src: svgDataUri(svgGirl(mood)) });
+            seedSprite("aurora_" + mood, { src: svgDataUri(svgGirl(mood)) });
         });
 
         // Knight, Maid, Cat, Councilor (NPC) — плейсхолдеры
@@ -126,26 +133,20 @@
             ["cat",       "neutral"], ["cat",       "sad"],
             ["councilor", "neutral"], ["councilor", "sad"],
         ].forEach(([kind, mood]) => {
-            spriteRegister(kind + "_" + mood, { src: svgDataUri(svgNpc(kind, mood)) });
+            seedSprite(kind + "_" + mood, { src: svgDataUri(svgNpc(kind, mood)) });
         });
 
         // Backgrounds
-        bgRegister("spirit_field", {
+        seedBg("spirit_field", {
             far:  svgDataUri(svgBg("spirit_far")),
             near: svgDataUri(svgBg("spirit_near")),
         });
 
-        bgRegister("castle", {
-            far: "https://ik.imagekit.io/atlantz/jam/castle_far.jpg",
-            near: "https://ik.imagekit.io/atlantz/jam/castle_near.png",
-        });
-        bgRegister("castle_dusk", {
+        seedBg("castle_dusk", {
             far:  svgDataUri(svgBg("spirit_far")),
             near: svgDataUri(svgBg("spirit_near")),
         });
     }
-
-    seedDefaults();
 
     // ----- Expose -----
     window.sprites = Object.assign(window.sprites || {}, {
@@ -159,4 +160,18 @@
         get:      bgGet,
         _all:     _backgrounds,
     });
+
+    // ----- Boot init -----
+    let booted = false;
+    window.registry = Object.assign(window.registry || {}, {
+        init() {
+            if (!booted) { seedDefaults(); booted = true; }
+            return {
+                sprites:     Object.keys(_sprites),
+                backgrounds: Object.keys(_backgrounds),
+            };
+        },
+    });
 })();
+
+console.log('registry.js loaded!')

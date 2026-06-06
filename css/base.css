@@ -70,6 +70,21 @@
 
 * { box-sizing: border-box; }
 
+[data-hud] {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 999;
+}
+
+.menu-hide {
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+}
+
 html, body {
     margin: 0;
     padding: 0;
@@ -108,6 +123,10 @@ tw-story {
 tw-story:not([tags="hide_header"]) section {
     display: block;
     color: transparent;
+}
+
+tw-story:not([tags="hide_header"]) section *{
+    color: transparent !important;
 }
 
 /* Re-show content inside our header blocks */

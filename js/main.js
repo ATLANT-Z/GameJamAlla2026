@@ -33,8 +33,11 @@
     let pendingPayload = null;  // payload, придерживаемый пока работает мини-игра
     let globalObserver = null;
 
+    let inited = false;
     function init() {
         startWatching();
+        if (inited) return;
+        inited = true;
         window.addEventListener("mini:complete", () => {
             if (pendingPayload) {
                 const p = pendingPayload;
@@ -52,7 +55,7 @@
        мутацию находим текущий <section> в tw-passage и пересинкаем.
        ------------------------------------------------------------ */
     function startWatching() {
-        const host = document.querySelector("tw-story") || document.body;
+        const host = document.body; // document.querySelector("tw-story") || document.body;
         globalObserver && globalObserver.disconnect();
         globalObserver = new MutationObserver(scheduleSync);
         globalObserver.observe(host, {
@@ -104,10 +107,10 @@
         // Шапки могли быть только что (пере)смонтированы — вернуть туда
         // ГГ / NPC / фон / HP. Идемпотентно: если ничего не изменилось,
         // эти функции ничего не делают.
-        if (window.gg  && window.gg.rehome)  window.gg.rehome();
-        if (window.npc && window.npc.rehome) window.npc.rehome();
-        if (window.bg  && window.bg.rehome)  window.bg.rehome();
-        if (window.hp  && window.hp.rehome)  window.hp.rehome();
+        // if (window.gg  && window.gg.rehome)  window.gg.rehome();
+        // if (window.npc && window.npc.rehome) window.npc.rehome();
+        // if (window.bg  && window.bg.rehome)  window.bg.rehome();
+        // if (window.hp  && window.hp.rehome)  window.hp.rehome();
 
         // Мини-игра занята экраном — придержим payload до её завершения.
         if (window.mini && window.mini.isRunning()) {
@@ -202,19 +205,20 @@
         const remaining = subtree.querySelectorAll(
             "tw-link:not([data-inline]), a[data-passage]:not([data-inline]), tw-expression:not([data-inline]) tw-link"
         );
+        const seen = new Set();
         remaining.forEach((node) => {
-            // Inside tw-expression — clicking the inner tw-link triggers Twine
             const isInsideExpression = node.closest("tw-expression");
+            const carrier = isInsideExpression || node;
+            if (seen.has(carrier)) return;
+            seen.add(carrier);
             const label = node.textContent.trim();
             if (!label) return;
-            const originalLink = pickOriginalLink(node, sourceEl);
+            const meta = readLinkMeta(node);
             choices.push({
                 label,
-                onClick: () => clickOriginal(originalLink),
+                onClick: () => clickLiveLink(meta),
             });
-            // Remove the expression entirely from body so we don't leave its open-button etc.
-            const removalTarget = isInsideExpression || node;
-            removalTarget.remove();
+            carrier.remove();
         });
 
         // 5. Tidy: remove now-empty tw-expression wrappers
@@ -226,26 +230,6 @@
         subtree.querySelectorAll("tw-open-button").forEach((e) => e.remove());
 
         return { speaker, html: subtree.innerHTML, choices };
-    }
-
-    function extractTargetFromCarrier(carrier) {
-        // 1. Explicit data-passage on the carrier or any descendant
-        if (carrier.dataset && carrier.dataset.passage) return carrier.dataset.passage;
-        const inner = carrier.querySelector && carrier.querySelector("[data-passage]");
-        if (inner) return inner.dataset.passage;
-        // 2. Harlowe link-goto: <tw-expression title="[[Label|Target]]" name="link-goto">
-        const title = (carrier.getAttribute && carrier.getAttribute("title")) ||
-                      (inner && inner.closest && inner.closest("tw-expression") &&
-                       inner.closest("tw-expression").getAttribute("title"));
-        if (title) {
-            const m = title.match(/\[\[([^\]]+?)\]\]/);
-            if (m) {
-                const body = m[1];
-                const parts = body.includes("|") ? body.split("|") : [body, body];
-                return parts[1].trim();
-            }
-        }
-        return null;
     }
 
     function replaceInlineLinks(subtree, sourceEl) {
@@ -296,44 +280,85 @@
 
             const label = twLink.textContent.trim();
             const carrier = candidate.nodeName === "TW-EXPRESSION" ? candidate : twLink;
-            const target = extractTargetFromCarrier(carrier) ||
-                           extractTargetFromCarrier(twLink) ||
+            const meta = readLinkMeta(twLink);
+            // если у tw-link нет ни passage-name ни data-passage —
+            // вытащим из carrier (tw-expression title="[[..|..]]").
+            const target = meta.passage ||
+                           (readLinkMeta(carrier).passage) ||
                            label;
 
             const span = document.createElement("span");
             span.className = "inline-link";
             span.dataset.inline = "true";
-            if (target) span.dataset.passage = target;
-            span.textContent = label;
+            span.dataset.passage = target;       // для нашего делегата-клика
+            span.dataset.label   = label;
+            span.textContent     = label;
 
             // Replace the carrier element with our span
             carrier.parentNode.replaceChild(span, carrier);
         });
     }
 
-    function pickOriginalLink(node, sourceEl) {
-        // We can't reliably reuse `node` across passage swaps because tw-passage
-        // may rerender. Easiest fix: find the SAME label inside the LIVE
-        // sourceEl right now and call .click() on the live element.
-        // But cloning the click handler costs us nothing extra here, since the
-        // user can also target by data-passage.
-        const passageAttr = node.dataset && node.dataset.passage;
-        if (passageAttr) {
-            return sourceEl.querySelector(`[data-passage="${cssEscape(passageAttr)}"]`) || node;
+    /**
+     * Найти в ЖИВОМ <section> tw-link/a[data-passage], соответствующий
+     * элементу из sandbox-копии. Ищем:
+     *   1. по passage-name (Harlowe-аттрибут на tw-link)
+     *   2. по data-passage
+     *   3. по тексту метки
+     * Возвращает live-элемент или null.
+     */
+    function findLiveLink({ passage, label }) {
+        const section = document.querySelector("tw-passage section");
+        if (!section) return null;
+        if (passage) {
+            const esc = cssEscape(passage);
+            const byAttr = section.querySelector(
+                `tw-link[passage-name="${esc}"], [data-passage="${esc}"]`
+            );
+            if (byAttr) return byAttr;
         }
-        // Try resolving by visible label text
-        const label = node.textContent.trim();
-        const all = sourceEl.querySelectorAll("tw-link, a[data-passage]");
-        for (const l of all) {
-            if (l.textContent.trim() === label) return l;
+        if (label) {
+            for (const l of section.querySelectorAll("tw-link, a[data-passage]")) {
+                if (l.textContent.trim() === label) return l;
+            }
         }
-        return node;
+        return null;
     }
 
-    function clickOriginal(el) {
-        if (!el) return;
-        try { el.click(); }
+    function clickLiveLink(meta) {
+        const live = findLiveLink(meta);
+        if (!live) {
+            console.warn("[main] клик по реплике/инлайну: не нашли live tw-link для", meta);
+            return;
+        }
+        try { live.click(); }
         catch (e) { console.error(e); }
+    }
+
+    function readLinkMeta(twLinkOrCarrier) {
+        // passage-name на tw-link
+        const pn = twLinkOrCarrier.getAttribute && twLinkOrCarrier.getAttribute("passage-name");
+        // data-passage (на <a> от convertBracketLinks или на самой tw-expression)
+        const dp = twLinkOrCarrier.dataset && twLinkOrCarrier.dataset.passage;
+        // фолбэк — из заголовка tw-expression: title="[[Label|Target]]"
+        let title = null;
+        if (!pn && !dp) {
+            const expr = twLinkOrCarrier.closest && twLinkOrCarrier.closest("tw-expression");
+            const t = (expr && expr.getAttribute("title")) ||
+                      (twLinkOrCarrier.getAttribute && twLinkOrCarrier.getAttribute("title"));
+            if (t) {
+                const m = t.match(/\[\[([^\]]+?)\]\]/);
+                if (m) {
+                    const body = m[1];
+                    const parts = body.includes("|") ? body.split("|") : [body, body];
+                    title = parts[1].trim();
+                }
+            }
+        }
+        return {
+            passage: pn || dp || title || null,
+            label:   twLinkOrCarrier.textContent.trim(),
+        };
     }
 
     function convertBracketLinks(rootEl) {
@@ -420,21 +445,34 @@
         console.info("[main] navigate:", target, "— no matching link found.");
     }
 
-    // Global delegated click for inline-links anywhere in the document
-    document.addEventListener("click", (ev) => {
-        const link = ev.target.closest && ev.target.closest(".inline-link[data-passage]");
-        if (!link) return;
-        ev.preventDefault();
-        ev.stopPropagation();
-        navigate(link.dataset.passage);
-    });
+    // Global delegated click for inline-links anywhere in the document.
+    // Триггерит .click() на соответствующем live tw-link внутри section.
+    let inlineBound = false;
+    function bindInlineClick() {
+        if (inlineBound) return;
+        document.addEventListener("click", (ev) => {
+            const link = ev.target.closest && ev.target.closest(".inline-link");
+            if (!link) return;
+            ev.preventDefault();
+            ev.stopPropagation();
+            clickLiveLink({
+                passage: link.dataset.passage || null,
+                label:   link.dataset.label   || link.textContent.trim(),
+            });
+        });
+        inlineBound = true;
+    }
 
-    document.addEventListener("DOMContentLoaded", init);
-    // Если скрипт грузится после DOMContentLoaded — стартуем сразу.
-    if (document.readyState !== "loading") init();
+    // Boot hook (вызывается из boot.js)
+    function start() {
+        bindInlineClick();
+        init();
+        return { watching: !!globalObserver };
+    }
 
     window.Game = window.Game || {};
     window.Game.rewatch  = startWatching;
     window.Game.navigate = navigate;
     window.Game.resync   = syncFromSection;   // ручной триггер для отладки
+    window.Game.start    = start;
 })();

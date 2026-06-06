@@ -30,6 +30,7 @@
             void el.offsetWidth;
             el.classList.remove("is-fading-out");
         }, 280);
+        console.log("bg", url);
     }
 
     function paint(entry) {
@@ -73,5 +74,11 @@
         current: () => currentId,
         clear:   clear,
         rehome:  rehome,
+        init() {
+            if (!farEl() || !nearEl()) {
+                console.warn("[bg.init] DOM-слои [data-bg-far]/[data-bg-near] не найдены — они появятся когда смонтируется шапка.");
+            }
+            return { current: currentId };
+        },
     });
 })();

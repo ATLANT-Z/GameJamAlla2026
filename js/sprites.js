@@ -162,7 +162,7 @@
             return document.querySelector("[data-npc-stack]");
         }
 
-        const PARALLAX_BY_STACK = [36, 22, 14, 8];
+        const PARALLAX_BY_STACK = [24, 16, 12, 8];
 
         function relayout() {
             if (!ensureRoot()) return;
@@ -304,6 +304,20 @@
         };
     })();
 
-    window.gg  = Object.assign(window.gg  || {}, gg);
-    window.npc = Object.assign(window.npc || {}, npc);
+    window.gg  = Object.assign(window.gg  || {}, gg, {
+        init() {
+            if (!document.querySelector("[data-gg-slot]")) {
+                console.warn("[gg.init] [data-gg-slot] не найден — слот появится с шапкой.");
+            }
+            return { current: gg.current() };
+        },
+    });
+    window.npc = Object.assign(window.npc || {}, npc, {
+        init() {
+            if (!document.querySelector("[data-npc-stack]")) {
+                console.warn("[npc.init] [data-npc-stack] не найден — слот появится с шапкой.");
+            }
+            return { stack: npc._stack().map((s) => s.key) };
+        },
+    });
 })();

@@ -90,11 +90,20 @@
         window.npc.speak(key);                     // подскочит как активный
     }
 
-    window.addEventListener("dialog:line", onDialogLine);
+    let bound = false;
+    function init() {
+        if (bound) return { bound: true };
+        window.addEventListener("dialog:line", onDialogLine);
+        bound = true;
+        const cfg = (window.Game && window.Game.config) || {};
+        const map = cfg.npcByName || (window.GameConfig && window.GameConfig.npcByName) || {};
+        return { bound: true, mapEntries: Object.keys(map) };
+    }
 
     // Public — на случай если автор хочет вручную подёргать ту же логику.
     window.speakers = Object.assign(window.speakers || {}, {
         resolve: resolveNpcKey,
         handle:  (speaker) => onDialogLine({ detail: { speaker } }),
+        init,
     });
 })();

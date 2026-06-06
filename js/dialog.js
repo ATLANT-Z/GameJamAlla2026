@@ -37,6 +37,10 @@
         choices: $("[data-choices]"),
     });
 
+    function cfg() {
+        return (window.Game && window.Game.config) || {};
+    }
+
     function onDialogClick(ev) {
         const dlg = ev.target.closest && ev.target.closest("[data-dialog]");
         if (!dlg) return;
@@ -44,7 +48,7 @@
         if (ev.target.closest(".choice")) return;
         if (ev.target.closest(".inline-link")) return;
 
-        if (typing && Game.config.skipOnClick) {
+        if (typing && cfg().skipOnClick) {
             skipRequested = true;
             return;
         }
@@ -140,7 +144,7 @@
        ============================================================ */
     function leave() {
         return new Promise((resolve) => {
-            const outMs = Game.config.passageOutMs || 220;
+            const outMs = cfg().passageOutMs || 220;
             const { choices, text } = refs();
 
             if (choices) {
@@ -205,7 +209,7 @@
             let cursor = elText;
             const cursorStack = [];
 
-            const cps = Math.max(1, Game.config.typewriterCps || 48);
+            const cps = Math.max(1, cfg().typewriterCps || 48);
             const msPerChar = 1000 / cps;
             let lastTime = performance.now();
             let acc = 0;
@@ -284,14 +288,19 @@
     function skip() { skipRequested = true; }
     function isTyping() { return typing; }
 
-    // Bind click handler eagerly — DOMContentLoaded may have already fired
-    // by the time this script runs (Twine inlines scripts after body parse).
-    document.addEventListener("click", onDialogClick);
+    let bound = false;
+    function init() {
+        if (bound) return { bound: true };
+        document.addEventListener("click", onDialogClick);
+        bound = true;
+        return { bound: true };
+    }
 
     window.dialog = Object.assign(window.dialog || {}, {
         render,
         skip,
         isTyping,
-        setSpeed(cps) { if (cps > 0) Game.config.typewriterCps = cps; },
+        setSpeed(cps) { if (cps > 0) cfg().typewriterCps = cps; },
+        init,
     });
 })();

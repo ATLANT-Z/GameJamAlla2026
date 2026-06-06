@@ -50,17 +50,25 @@
             if (cfg.minis && window.mini && typeof mini.register === "function") {
                 Object.entries(cfg.minis).forEach(([id, def]) => mini.register(id, def));
             }
+
+            // npcByName — пробрасываем в Game.config, чтобы speakers.js
+            // не лез в GameConfig напрямую.
+            if (cfg.npcByName) {
+                Game.config.npcByName = Object.assign(
+                    {}, Game.config.npcByName || {}, cfg.npcByName
+                );
+            }
+        },
+
+        // Boot init — вызывается из boot.js. Применяет GameConfig.
+        init() {
+            if (!window.GameConfig) {
+                throw new Error("window.GameConfig отсутствует (game-config.js не загружен?)");
+            }
+            Game.applyConfig(window.GameConfig);
+            return Game.config;
         },
     };
 
     window.Game = Game;
-
-    // Auto-apply GameConfig at boot — works whether DOMContentLoaded
-    // has already fired or not.
-    function applyNow() { if (window.GameConfig) Game.applyConfig(window.GameConfig); }
-    if (document.readyState === "loading") {
-        document.addEventListener("DOMContentLoaded", applyNow);
-    } else {
-        applyNow();
-    }
 })();

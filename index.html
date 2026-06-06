@@ -29,7 +29,7 @@
 
 <!-- Sprite stage: GG on the left, NPC stack on the right -->
 <div class="cast" aria-hidden="true">
-    <div class="cast__gg"  data-parallax="36" data-gg-slot></div>
+    <div class="cast__gg"  data-parallax="28" data-gg-slot></div>
     <div class="cast__npcs" data-npc-stack></div>
 </div>
 
@@ -111,6 +111,8 @@
 <tw-passage class="twine-hidden" data-passage=""></tw-passage>
 
 <!-- =========================== SCRIPTS =========================== -->
+<!-- Каждый файл ниже только регистрирует свой публичный API на window
+     и НЕ запускается сам. Реальный старт — в boot.js. -->
 <script src="js/config.js"></script>
 <script src="js/registry.js"></script>
 <script src="js/background.js"></script>
@@ -120,11 +122,13 @@
 <script src="js/parallax.js"></script>
 <script src="js/mini.js"></script>
 <script src="js/speakers.js"></script>
-<script src="js/game-config.js"></script>
 <script src="js/main.js"></script>
+<script src="js/observers.js"></script>
+
+<!-- Единственная точка входа. Дёргает .init() у всех модулей по очереди. -->
+<script src="js/boot.js"></script>
 
 <!-- DEV: tiny panel to fire API calls without Twine. Delete for release. -->
 <script src="js/dev-stand.js"></script>
-
 </body>
 </html>

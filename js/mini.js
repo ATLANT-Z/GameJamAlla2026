@@ -323,7 +323,7 @@
 
             const dx = STATE.dx;
             const dy = STATE.dy;
-            const rot = (dx / 14).toFixed(2);
+            const rot = (dx / 10).toFixed(2);
             cardEl.style.transform = `translateX(${dx}px) translateY(${dy * 0.2}px) rotate(${rot}deg)`;
 
             const card = STATE.currentCard;
@@ -439,5 +439,8 @@
         getState: snapshotState,
         isRunning: () => STATE.running,
         _registry: REGISTRY,
+        init() {
+            return { registered: Object.keys(REGISTRY) };
+        },
     });
 })();
