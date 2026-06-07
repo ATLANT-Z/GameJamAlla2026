@@ -226,6 +226,26 @@
             "ДУХ": "spirit"
         },
 
+        /* ------------------------------------------------------------
+           sounds — id → "url" | { src, volume?, loop? }
+           Используется через:
+               sound.play("id")
+               sound.play(["a","b"])
+               sound.play("id", { loop: true, volume: 0.5 })
+           Или прямо из сценария Twine:
+               ЗВУК: thunder @@@
+               ЗВУК: thunder, lightning @@@   (через запятую — по очереди)
+           Реплика "ЗВУК: …" в диалоге НЕ показывается — это просто
+           команда звуковому модулю, парсер сразу едет дальше.
+           ------------------------------------------------------------ */
+        sounds: {
+            // Примеры — замени на свои URL'ы:
+            // thunder:  { src: "audio/thunder.mp3", volume: 0.8 },
+            // ambient:  { src: "audio/forest.mp3",  volume: 0.3, loop: true },
+            // step:     "audio/step.wav",          // короткая форма
+            // page:     { src: "audio/page.ogg",   volume: 0.6 },
+        },
+
         minis: {
             /* ---------- TUTORIAL ---------- */
             tutorial1: {
@@ -938,6 +958,7 @@
         {name: "hp", target: () => window.hp},
         {name: "dialog", target: () => window.dialog},
         {name: "mini", target: () => window.mini},
+        {name: "sound", target: () => window.sound},
         {name: "speakers", target: () => window.speakers},
         {name: "parallax", target: () => window.parallax},
         {name: "observers", target: () => window.observers},

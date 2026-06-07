@@ -267,6 +267,35 @@
         const choices = [];  // collected from ALL non-inline tw-links
 
         chunks.forEach((chunkHtml) => {
+            // ============================================================
+            // ЗВУК: id [, id2, id3] — служебная "реплика". Не показывается
+            // в диалоге, а сразу проигрывает звук(и) через sound.play().
+            // Несколько id через запятую — играются по очереди.
+            //   ЗВУК: thunder @@@
+            //   ЗВУК: thunder, lightning @@@
+            // Поддерживаем также латинский SOUND:.
+            // Парсим по plain-тексту чанка (HTML-теги выкинуты), чтоб
+            // Twine-обёртки не мешали.
+            // ============================================================
+            const plain = chunkHtml.replace(/<[^>]+>/g, "").replace(/&nbsp;/gi, " ").trim();
+            const soundMatch = plain.match(/^(?:ЗВУК|SOUND)\s*:\s*(.+)$/i);
+            if (soundMatch) {
+                const ids = soundMatch[1]
+                    .split(",")
+                    .map((s) => s.trim())
+                    .filter(Boolean);
+                if (ids.length && window.sound && typeof window.sound.play === "function") {
+                    try {
+                        window.sound.play(ids.length === 1 ? ids[0] : ids);
+                    } catch (e) {
+                        console.error("[main] ЗВУК: play упал:", e);
+                    }
+                } else if (!ids.length) {
+                    console.warn("[main] ЗВУК: пустой список id в реплике");
+                }
+                return; // в lines не добавляем — реплика "съедена"
+            }
+
             const line = parseChunk(chunkHtml, sourceEl);
             if (line.choices && line.choices.length) {
                 choices.push(...line.choices);
@@ -298,10 +327,12 @@
         let mood = "";
         let body = cleaned;
         // Group 1: name (ALL-CAPS, latin or cyrillic, spaces/dashes allowed)
-        // Group 2: optional @mood — латиница нижнего регистра, как в реестре
+        // Group 2: optional @mood — латиница, camelCase можно (kneeWow, sadEyes).
+        //          Регистр НЕ нормализуем — должен совпасть один-в-один с тем,
+        //          как ты зарегистрировал спрайт в sprites: { aurora: { kneeWow: ... } }.
         // Group 3: rest of the body
         const speakerMatch = cleaned.match(
-            /^([А-ЯЁA-Z][А-ЯЁA-Z0-9\s\-]+?)\s*(?:@([a-z_][a-z0-9_]*))?\s*:\s*([\s\S]*)$/
+            /^([А-ЯЁA-Z][А-ЯЁA-Z0-9\s\-]+?)\s*(?:@([a-zA-Z_][a-zA-Z0-9_]*))?\s*:\s*([\s\S]*)$/
         );
         if (speakerMatch) {
             const name = speakerMatch[1].trim();

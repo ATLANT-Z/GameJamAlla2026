@@ -51,6 +51,13 @@
                 Object.entries(cfg.minis).forEach(([id, def]) => mini.register(id, def));
             }
 
+            // Sounds — store by id, used by sound.play("id")
+            //   sounds: { id: "url" }
+            //   sounds: { id: { src, volume, loop } }
+            if (cfg.sounds && window.sound && typeof sound.register === "function") {
+                Object.entries(cfg.sounds).forEach(([id, def]) => sound.register(id, def));
+            }
+
             // npcByName — пробрасываем в Game.config, чтобы speakers.js
             // не лез в GameConfig напрямую.
             if (cfg.npcByName) {
