@@ -133,7 +133,7 @@
     position: fixed;
     z-index: 999;
     inset: -3%;
-    pointer-events: none;
+    pointer-events: none !important;
     transform: translate(var(--px, 0), var(--py, 0));
     background: radial-gradient(4px 4px at 12% 22%, var(--c-gold-0) 0, transparent 100%),
     radial-gradient(4px 4px at 24% 68%, var(--c-arcane) 0, transparent 100%),

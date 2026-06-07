@@ -95,14 +95,59 @@
          drops.hide() прячет ТОЛЬКО капли, hp остаётся видимым.
        Поэтому флаг живёт в общем STATE, а render() ставит
        .drops--hidden на [data-drops] поверх state--hidden от hp. */
-    function dropFill(idx) {
+    // Имена капель в порядке их индексов в HTML ([data-drop-index="0|1|2"]).
+    // Используются в API и условных секциях: drops.knight, drops.maid и т.д.
+    // Можно переопределить через drops.configure({ names: [...] }).
+    let DROP_NAMES = ["knight", "maid", "cat"];
+    // Set заполненных ИНДЕКСОВ (а не имён) — чтобы переименование не
+    // ломало уже накопленный прогресс.
+    const DROPS_FILLED = new Set();
+
+    function resolveDropIndex(key) {
+        if (typeof key === "number" && key >= 0) return key;
+        if (typeof key === "string") {
+            if (/^\d+$/.test(key)) return parseInt(key, 10);
+            const idx = DROP_NAMES.indexOf(key);
+            if (idx !== -1) return idx;
+            console.warn("[drops] неизвестное имя капли:", key,
+                "— ожидаемые:", DROP_NAMES.join(", "));
+            return null;
+        }
+        return null;
+    }
+
+    function dropFill(key) {
+        const idx = resolveDropIndex(key);
+        if (idx == null) return;
+        DROPS_FILLED.add(idx);
         const el = document.querySelector(`[data-drop-index="${idx}"]`);
         if (el) el.classList.add("is-filled");
     }
     function dropReset() {
+        DROPS_FILLED.clear();
         document.querySelectorAll("[data-drop-index]").forEach((el) =>
             el.classList.remove("is-filled"));
     }
+    function dropsHas(key) {
+        const idx = resolveDropIndex(key);
+        return idx != null && DROPS_FILLED.has(idx);
+    }
+    function dropsCount() { return DROPS_FILLED.size; }
+
+    // Плоский снимок для условных <section data-if="...">.
+    // Возвращает { count, knight, maid, cat, ... } — булевы флаги.
+    function dropsSnapshot() {
+        const out = { count: DROPS_FILLED.size };
+        DROP_NAMES.forEach((name, idx) => {
+            if (name) out[name] = DROPS_FILLED.has(idx);
+        });
+        return out;
+    }
+
+    function dropsConfigure(opts) {
+        if (opts && Array.isArray(opts.names)) DROP_NAMES = opts.names.slice();
+    }
+
     function dropsShow() { STATE.dropsHidden = false; render(); }
     function dropsHide() { STATE.dropsHidden = true;  render(); }
     function dropsToggle(v) {
@@ -111,11 +156,15 @@
         render();
     }
     window.drops = Object.assign(window.drops || {}, {
-        fill:   dropFill,
-        reset:  dropReset,
-        show:   dropsShow,
-        hide:   dropsHide,
-        toggle: dropsToggle,
-        hidden: () => STATE.dropsHidden,
+        fill:      dropFill,
+        reset:     dropReset,
+        has:       dropsHas,
+        count:     dropsCount,
+        snapshot:  dropsSnapshot,
+        configure: dropsConfigure,
+        show:      dropsShow,
+        hide:      dropsHide,
+        toggle:    dropsToggle,
+        hidden:    () => STATE.dropsHidden,
     });
 })();

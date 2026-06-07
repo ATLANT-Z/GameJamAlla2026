@@ -82,7 +82,124 @@
         // <section> может лежать где угодно внутри tw-passage; берём первый.
         const passage = document.querySelector("tw-passage");
         if (!passage) return null;
-        return passage.querySelector("section");
+        // Если пассаж содержит несколько <section> с data-if / data-else-if /
+        // data-else — резолвим цепочку и прячем проигравших через hidden.
+        resolveConditionalSections(passage);
+        return passage.querySelector("section:not([hidden])");
+    }
+
+    /* ------------------------------------------------------------
+       Условные секции: <section data-if="..."> / data-else-if /
+       data-else. Автор пишет несколько секций подряд внутри пассажа,
+       мы выбираем первую истинную и прячем остальные через
+       hidden-атрибут. В выражении доступны:
+           state — снимок шкал мини-игр (mini.getState()):
+                   state.hp, state.wisdom, state.pride, ...
+           hp    — текущее значение hp полоски (window.hp.value()).
+       Любое валидное JS-выражение: &&, ||, ?:, скобки и т.д.
+       ------------------------------------------------------------ */
+    function buildCondCtx() {
+        const state = (window.mini && typeof window.mini.getState === "function")
+            ? window.mini.getState()
+            : {};
+        const hp = (window.hp && typeof window.hp.value === "function")
+            ? window.hp.value()
+            : null;
+        const drops = (window.drops && typeof window.drops.snapshot === "function")
+            ? window.drops.snapshot()
+            : { count: 0 };
+        return { state, hp, drops };
+    }
+
+    // Кешируем скомпилированные выражения по строке — иначе на каждом
+    // ре-синке пересоздаём Function() заново.
+    const CONDS = Object.create(null);
+    function compileCond(expr) {
+        if (CONDS[expr]) return CONDS[expr];
+        try {
+            // eslint-disable-next-line no-new-func
+            CONDS[expr] = new Function("state", "hp", "drops", "return (" + expr + ");");
+        } catch (e) {
+            console.error("[main] data-if: не парсится выражение:", expr, e);
+            CONDS[expr] = () => false;
+        }
+        return CONDS[expr];
+    }
+    function evalCond(expr) {
+        const ctx = buildCondCtx();
+        try {
+            return !!compileCond(expr)(ctx.state, ctx.hp, ctx.drops);
+        } catch (e) {
+            console.error("[main] data-if: ошибка выполнения:", expr, e);
+            return false;
+        }
+    }
+
+    function resolveConditionalSections(passage) {
+        // Берём ТОЛЬКО прямых детей passage-tag, чтобы не лезть в чужие
+        // вложенные <section> (если такие вдруг будут в HTML спрайтов и т.д.).
+        const sections = [];
+        for (const ch of passage.children) {
+            if (ch.tagName === "SECTION") sections.push(ch);
+        }
+        if (sections.length < 2) return;       // одна секция — нечего решать
+
+        let chainActive   = false;             // мы внутри if/else-if/else цепочки
+        let chainResolved = false;             // в текущей цепочке уже есть победитель
+
+        for (const sec of sections) {
+            const hasIf     = sec.hasAttribute("data-if");
+            const hasElseIf = sec.hasAttribute("data-else-if");
+            const hasElse   = sec.hasAttribute("data-else");
+
+            // Безусловная секция рядом с условными — это смесь, кричим.
+            if (!hasIf && !hasElseIf && !hasElse) {
+                console.warn(
+                    "[main] <section> без data-if/else-if/else соседствует " +
+                    "с условными. Это сломает цепочку — раздели на отдельные пассажи " +
+                    "или оберни всё в условия."
+                );
+                sec.removeAttribute("hidden");
+                chainActive = false;
+                chainResolved = false;
+                continue;
+            }
+
+            if (hasIf) {
+                // Новая цепочка.
+                chainActive = true;
+                chainResolved = false;
+            } else if (!chainActive) {
+                // else-if / else без предыдущего if — мусор.
+                console.warn(
+                    "[main] data-else-if/data-else без предшествующего data-if — скрываю секцию."
+                );
+                sec.setAttribute("hidden", "");
+                continue;
+            }
+
+            if (chainResolved) {
+                sec.setAttribute("hidden", "");
+                if (hasElse) chainActive = false;
+                continue;
+            }
+
+            let win;
+            if (hasElse) {
+                win = true;
+            } else {
+                const expr = sec.getAttribute(hasIf ? "data-if" : "data-else-if");
+                win = evalCond(expr);
+            }
+
+            if (win) {
+                sec.removeAttribute("hidden");
+                chainResolved = true;
+            } else {
+                sec.setAttribute("hidden", "");
+            }
+            if (hasElse) chainActive = false;
+        }
     }
 
     function syncFromSection() {
@@ -320,12 +437,14 @@
     function findLiveLink({ passage, label }) {
         // Контракт: ВЕСЬ авторский контент пассажа лежит в <section>.
         // Если section нет — это ошибка автора, кричим в консоль.
-        const section = document.querySelector("tw-passage section");
+        // :not([hidden]) — на случай условных секций (data-if и т.д.).
+        const section = document.querySelector("tw-passage section:not([hidden])");
         if (!section) {
             console.error(
-                "[main] findLiveLink: внутри <tw-passage> нет <section>! " +
+                "[main] findLiveLink: внутри <tw-passage> нет видимого <section>! " +
                 "Заверни весь авторский текст пассажа в <section>…</section>, " +
-                "иначе ссылки и реплики не подцепятся."
+                "а если используешь data-if — убедись, что хотя бы одна ветка " +
+                "истинна (или добавь <section data-else>)."
             );
             return null;
         }

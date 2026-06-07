@@ -1,0 +1,230 @@
+/* ============================================================
+   end.css — финальный экран. Поверх menu.css.
+
+   ЧТО ВНУТРИ:
+     • .end-page                  — корень оверлея
+     • .end-bg / .end-bg__slide   — карусель сцен, каждая сцена
+                                    содержит ДВА слоя (far + near)
+                                    — как настоящий бэкграунд игры
+     • .end-bg__layer             — слой фона с параллаксом
+     • .end-title__main / __thanks — финальная гарнитура
+     • .end-vignette              — плотнее, чтоб текст читался
+     • анимация end-title-breathe — медленный «вдох-выдох»
+   ============================================================ */
+
+/* ============================================================
+   PAGE — финал поверх всей игры. Высокий z-index + изолируем стек.
+   ============================================================ */
+.end-page {
+    z-index: 9000;
+    isolation: isolate;
+}
+
+/* ============================================================
+   BG CAROUSEL — сцены стопкой, активная opacity:1, остальные 0.
+   Внутри сцены два слоя: far (фон) и near (передний план с PNG'шкой).
+   ============================================================ */
+.end-bg {
+    position: fixed;
+    z-index: 1;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+    background-color: var(--c-night-1);
+}
+
+.end-bg__slide {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity 2200ms var(--ease-soft);
+    will-change: opacity;
+}
+
+.end-bg__slide.is-active {
+    opacity: 1;
+}
+
+/* Слой фона — повторяет .bg__layer из background.css.
+   inset: -6% — чтоб было куда сдвигаться при параллаксе и не светились края. */
+.end-bg__layer {
+    position: absolute;
+    inset: -6%;
+    background-position: center;
+    background-size: cover;
+    background-repeat: no-repeat;
+    will-change: transform;
+    transform: translate3d(var(--px, 0), var(--py, 0), 0);
+}
+
+/* FAR — задний план. Размытый, темнее. Параллакс меньше. */
+.end-bg__layer--far {
+    filter: blur(2px) saturate(.9) brightness(.7);
+}
+
+/* NEAR — передний план. Чётче. Параллакс больше — за счёт data-parallax в JS. */
+.end-bg__layer--near {
+    filter: saturate(1.05) brightness(.85);
+}
+
+/* Fallback пустого слайда — чтоб не зияло белым, если URL'ов нет. */
+.end-bg__slide--empty {
+    background: radial-gradient(ellipse at 50% 100%,
+    var(--c-night-2) 0%, var(--c-night-0) 80%);
+    opacity: 1;
+}
+
+/* ============================================================
+   STARS / VIGNETTE — поверх фонов
+   ============================================================ */
+.end-vignette {
+    background: radial-gradient(ellipse at center,
+    transparent 25%, rgba(3, 5, 15, .7) 100%),
+    linear-gradient(180deg,
+            rgba(3, 5, 15, .45) 0%, transparent 30%,
+            transparent 70%, rgba(3, 5, 15, .55) 100%);
+}
+
+/* ============================================================
+   CONTENT — заголовок + кнопка по центру. Чуть подбираем gap'ы.
+   ============================================================ */
+.end-content {
+    gap: 28px;
+}
+
+.end-title {
+    gap: 14px;
+}
+
+.end-content__bg {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 28px;
+    text-align: center;
+
+    padding: 150px 120px;
+    background: radial-gradient(
+            circle at center,
+            rgba(0, 0, 0, 0.2) 0%,
+            rgba(0, 0, 0, 0.1) 50%,
+            rgba(0, 0, 0, 0) 70%,
+            transparent 100%
+    );
+    border-radius: 500px;
+}
+
+/* ============================================================
+   TITLE — размеры подобраны компактнее, чем у меню. Чтоб не
+   разносило текст по всему экрану.
+   ============================================================ */
+.end-title__main {
+    font-size: clamp(56px, 11vw, 120px);
+    letter-spacing: .12em;
+    line-height: 1;
+}
+
+.end-title__thanks {
+    font-size: clamp(18px, 3vw, 30px);
+    letter-spacing: .38em;
+    text-transform: lowercase;
+    font-style: italic;
+    line-height: 1;
+    font-family: var(--font-heading);
+}
+
+/* Дыхание основного слоя текста — поверх gold-shimmer (он наследуется
+   от .menu-title__line). Две строки дышат с разной длительностью и
+   сдвигом фазы, иначе выглядит как электронная мигалка. */
+.end-title__main:not(.line) {
+    animation: title-shimmer 14s ease-in-out infinite,
+    end-title-breathe 5.5s var(--ease-soft) infinite;
+}
+
+.end-title__thanks:not(.line) {
+    animation: title-shimmer 18s ease-in-out infinite,
+    end-title-breathe 4.2s var(--ease-soft) infinite;
+    animation-delay: 0s, 1.2s;
+}
+
+@keyframes end-title-breathe {
+    0%, 100% {
+        opacity: .8;
+        filter: drop-shadow(0 1px 0 rgba(0, 0, 0, .35)) drop-shadow(0 0 16px rgba(212, 166, 74, .22));
+    }
+    50% {
+        opacity: 1;
+        filter: drop-shadow(0 1px 0 rgba(0, 0, 0, .35)) drop-shadow(0 0 28px rgba(255, 242, 193, .5)) drop-shadow(0 0 8px rgba(255, 242, 193, .3));
+    }
+}
+
+/* Обводочный слой (`.line`) — синхронизирован с основным. */
+.end-title__main.line,
+.end-title__thanks.line {
+    animation: end-title-line-breathe 5.5s var(--ease-soft) infinite;
+}
+
+.end-title__thanks.line {
+    width: 100%;
+    animation-duration: 4.2s;
+    animation-delay: 1.2s;
+}
+
+@keyframes end-title-line-breathe {
+    0%, 100% {
+        opacity: .35;
+    }
+    50% {
+        opacity: .85;
+    }
+}
+
+/* ============================================================
+   NAV — кнопка финала поплотнее к заголовку.
+   ============================================================ */
+.end-nav {
+    margin-top: 4px;
+}
+
+/* ============================================================
+   MOBILE
+   ============================================================ */
+@media (max-width: 720px) {
+    .end-title__main {
+        font-size: clamp(44px, 16vw, 88px);
+    }
+
+    .end-title__thanks {
+        font-size: clamp(14px, 4.5vw, 22px);
+        letter-spacing: .32em;
+    }
+
+    .end-content {
+        gap: 22px;
+    }
+}
+
+/* ============================================================
+   REDUCED MOTION
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+    .end-bg__slide {
+        transition: opacity 800ms linear;
+    }
+
+    .end-bg__layer {
+        transform: none !important;
+    }
+
+    .end-title__main:not(.line),
+    .end-title__thanks:not(.line) {
+        animation: title-shimmer 14s ease-in-out infinite;
+    }
+
+    .end-title__main.line,
+    .end-title__thanks.line {
+        animation: none;
+        opacity: .5;
+    }
+}

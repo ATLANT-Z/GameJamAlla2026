@@ -12,7 +12,20 @@
    never overwrite each other.
    ============================================================ */
 
-/* ---------- GG (Aurora) on the left ---------- */
+/* ---------- GG (Aurora) on the left ----------
+   Прозрачность распределена НЕРАВНОМЕРНО — "thread-to-the-body":
+       нижние 20% высоты спрайта (ноги/подол, особенно если героиня сидит
+       на коленях) выцветают на ПОЛНУЮ силу;
+       верхние 80% — только на 50% этой силы.
+   --gg-opacity ∈ [0.35..1] выставляется из hp.js по hp%.
+
+   Альфа маски (где 1.0 = полностью видимо):
+       top  (0..80%):  0.5 + opacity*0.5   — половина силы выцветания
+       bot (80..100%): opacity              — полная сила выцветания
+
+   Анимируем сам --gg-opacity (см. @property в base.css), маска
+   перерисовывается плавно вслед за ним.
+   ---------------------------------------------- */
 .cast__gg {
     position: absolute;
     left: 2vw;
@@ -21,25 +34,24 @@
     max-width: 460px;
     height: 80vh;
     pointer-events: none;
-    will-change: transform, opacity;
+    will-change: transform;
     transform: translate3d(var(--px, 0), var(--py, 0), 0);
 
-    /* opacity fades down with HP (thread-to-the-body illusion) */
-    opacity: var(--gg-opacity, 1);
+    opacity: 1;
     -webkit-mask-image: linear-gradient(
-        180deg,
-        rgba(0,0,0,1) 0%,
-        rgba(0,0,0,1) calc(20% + (1 - var(--gg-opacity)) * 60%),
-        rgba(0,0,0, calc(0.15 + var(--gg-opacity) * 0.85)) 100%
+            180deg,
+            rgba(0, 0, 0, calc(0.5 + var(--gg-opacity))) 10%,
+            rgba(0, 0, 0, calc(var(--gg-opacity) * 0.7)) 75%,
+            rgba(0, 0, 0, calc(var(--gg-opacity) * 0.1)) 85%
     );
-            mask-image: linear-gradient(
-        180deg,
-        rgba(0,0,0,1) 0%,
-        rgba(0,0,0,1) calc(20% + (1 - var(--gg-opacity)) * 60%),
-        rgba(0,0,0, calc(0.15 + var(--gg-opacity) * 0.85)) 100%
+    mask-image: linear-gradient(
+            180deg,
+            rgba(0, 0, 0, calc(0.6 + var(--gg-opacity))) 10%,
+            rgba(0, 0, 0, calc(0.4 + var(--gg-opacity) / 2)) 75%,
+            rgba(0, 0, 0, calc(var(--gg-opacity) * var(--gg-opacity) * var(--gg-opacity))) 85%
     );
 
-    transition: opacity 600ms var(--ease-soft);
+    transition: --gg-opacity 600ms var(--ease-soft);
 }
 
 .sprite {
@@ -48,13 +60,15 @@
     background-position: center bottom;
     background-repeat: no-repeat;
     background-size: contain;
-    transition:
-        transform 500ms var(--ease-spring),
-        opacity   300ms var(--ease-soft),
-        filter    400ms var(--ease-soft);
+    transition: transform 500ms var(--ease-spring),
+    opacity 300ms var(--ease-soft),
+    filter 400ms var(--ease-soft);
     opacity: 0;
 }
-.sprite.is-active { opacity: 1; }
+
+.sprite.is-active {
+    opacity: 1;
+}
 
 /* ---------- NPC stack on the right ---------- */
 .cast__npcs {
@@ -81,32 +95,45 @@
     background-repeat: no-repeat;
     background-size: contain;
     transform-origin: 80% 80%;
-    transition:
-        transform 600ms var(--ease-spring),
-        filter    500ms var(--ease-soft),
-        opacity   400ms var(--ease-soft);
+    transition: transform 600ms var(--ease-spring),
+    filter 500ms var(--ease-soft),
+    opacity 400ms var(--ease-soft);
     will-change: transform, filter;
     filter: brightness(.7) saturate(.85);
 
     --stack-transform: translateX(0%) scale(1);
-    transform:
-        var(--stack-transform)
-        translate3d(var(--px, 0), var(--py, 0), 0);
+    transform: var(--stack-transform) translate3d(var(--px, 0), var(--py, 0), 0);
 }
 
 /* Stack depth: deeper = smaller, more right, more dim, less z */
-.npc[data-stack="0"] { --stack-transform: translateX(  0%) scale(1.00); z-index: 30; filter: brightness(1)   saturate(1);   }
-.npc[data-stack="1"] { --stack-transform: translateX( 30%) scale(.86);  z-index: 20; filter: brightness(.65) saturate(.8);  }
-.npc[data-stack="2"] { --stack-transform: translateX( 55%) scale(.74);  z-index: 10; filter: brightness(.5)  saturate(.7) blur(1px); }
-.npc[data-stack="3"] { --stack-transform: translateX( 75%) scale(.66);  z-index:  5; filter: brightness(.4)  saturate(.6) blur(2px); }
+.npc[data-stack="0"] {
+    --stack-transform: translateX(0%) scale(1.00);
+    z-index: 30;
+    filter: brightness(1) saturate(1);
+}
+
+.npc[data-stack="1"] {
+    --stack-transform: translateX(30%) scale(.86);
+    z-index: 20;
+    filter: brightness(.65) saturate(.8);
+}
+
+.npc[data-stack="2"] {
+    --stack-transform: translateX(55%) scale(.74);
+    z-index: 10;
+    filter: brightness(.5) saturate(.7) blur(1px);
+}
+
+.npc[data-stack="3"] {
+    --stack-transform: translateX(75%) scale(.66);
+    z-index: 5;
+    filter: brightness(.4) saturate(.6) blur(2px);
+}
 
 /* Active speaker scoots in toward center & scales up slightly */
 .npc.is-active {
     --stack-transform: translateX(-22%) scale(1.06);
-    filter:
-        brightness(1.05) saturate(1.05)
-        drop-shadow(0 0 16px rgba(207, 226, 255, .30))
-        drop-shadow(0 0 28px rgba(184, 162, 255, .20));
+    filter: brightness(1.05) saturate(1.05) drop-shadow(0 0 16px rgba(207, 226, 255, .30)) drop-shadow(0 0 28px rgba(184, 162, 255, .20));
     z-index: 40;
 }
 
@@ -126,6 +153,7 @@
     opacity: 0;
     transform: translateY(20px) scale(.96);
 }
+
 .npc.is-entering {
     opacity: 0;
     --stack-transform: translateX(80%) scale(.6);

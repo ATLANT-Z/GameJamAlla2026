@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Пожалуйста, пойдём со мной — Конец</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link rel="stylesheet" href="css/base.css">
+    <!-- Берём из меню: типографика заголовка, кнопки, звёзды, виньетка, лоадер. -->
+    <link rel="stylesheet" href="css/menu.css">
+    <link rel="stylesheet" href="css/end.css">
+</head>
+<body>
+
+<div class="loader" data-loader>
+    <div class="loader__rune" aria-hidden="true"></div>
+    <div class="loader__label">конец</div>
+</div>
+
+<div class="menu-page end-page" data-end>
+
+    <div class="end-bg" data-end-bg aria-hidden="true"></div>
+
+    <div class="menu-stars" data-parallax="10" aria-hidden="true"></div>
+    <div class="menu-vignette end-vignette" aria-hidden="true"></div>
+
+    <main class="menu-content end-content" data-parallax="14">
+        <div class="end-content__bg">
+            <h1 class="menu-title end-title">
+                <span class="menu-title__line menu-title__line--top end-title__main">
+                    Конец
+                </span>
+                <span class="menu-title__line menu-title__line--top end-title__main line">
+                    Конец
+                </span>
+
+                <span class="menu-title__ornament" aria-hidden="true"></span>
+
+                <span class="menu-title__line menu-title__line--bot end-title__thanks">
+                    спасибо,&nbsp;что&nbsp;играли
+                </span>
+                <span class="menu-title__line menu-title__line--bot end-title__thanks line">
+                    спасибо,&nbsp;что&nbsp;играли
+                </span>
+            </h1>
+
+            <nav class="menu-nav end-nav" aria-label="Финал">
+                <a href="menu.html" class="menu-btn">
+                    <span class="menu-btn__corner menu-btn__corner--tl" aria-hidden="true"></span>
+                    <span class="menu-btn__corner menu-btn__corner--tr" aria-hidden="true"></span>
+                    <span class="menu-btn__corner menu-btn__corner--bl" aria-hidden="true"></span>
+                    <span class="menu-btn__corner menu-btn__corner--br" aria-hidden="true"></span>
+                    <span class="menu-btn__label">[[В меню|Меню]]</span>
+                </a>
+            </nav>
+        </div>
+    </main>
+</div>
+
+<!-- ============================================================
+     SCRIPTS. В живой игре end() сам подтянет фоны из bg-registry.
+     Тут (standalone) — передаём пары { far, near } вручную.
+     ============================================================ -->
+<script src="js/parallax.js"></script>
+<script src="js/end.js"></script>
+<script>
+    end({
+        slides: [
+            {
+                far: "https://ik.imagekit.io/atlantz/jam/castle_far.jpg",
+                near: "https://ik.imagekit.io/atlantz/jam/castle_near.png"
+            },
+            {
+                far: "https://ik.imagekit.io/atlantz/jam/menu_bg.png",
+                near: "https://ik.imagekit.io/atlantz/jam/menu_near2.png"
+            }
+            // Добавь сколько хочешь сцен по этому же шаблону:
+            //  { far: "...", near: "..." }
+        ]
+    });
+</script>
+
+</body>
+</html>

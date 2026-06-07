@@ -274,7 +274,10 @@
 
     function dealNext() {
         let card = null;
-        // Если предыдущий свайп заказал конкретный id — ищем его в колоде.
+        // Если предыдущий свайп заказал конкретный id — ищем его в колоде
+        // и сжигаем весь префикс перед ней. Семантика: прыжок вперёд через
+        // карточки означает, что эти ветки пропущены окончательно — назад
+        // к ним уже не возвращаемся.
         if (STATE.pendingNextId) {
             const wantedId = STATE.pendingNextId;
             STATE.pendingNextId = null;
@@ -282,7 +285,9 @@
             if (idx === -1) {
                 console.warn("[mini] onSwipe → карточки с id не найдено в колоде:", wantedId);
             } else {
-                card = STATE.deck.splice(idx, 1)[0];
+                // Удаляем всё ДО целевой включительно: сначала префикс, потом саму карту с фронта.
+                if (idx > 0) STATE.deck.splice(0, idx);
+                card = STATE.deck.shift();
             }
         }
         if (!card) card = pickNextCard();
@@ -341,9 +346,15 @@
         // is-single-outcome.
         const single = !!card.outcome;
         cardEl.classList.toggle("is-single-outcome", single);
-        const outcomeLabel = single ? (card.outcome.label || "") : "";
-        if (leftEl)  leftEl.textContent  = single ? outcomeLabel : ((card.left  && card.left.label)  || "");
-        if (rightEl) rightEl.textContent = single ? outcomeLabel : ((card.right && card.right.label) || "");
+        const outcomeLabel = single ? labelOf(card.outcome) : "";
+        // ВАЖНО: подпись инвертируется по стороне. Когда игрок тянет влево
+        // (выбирает левый исход), карточка уезжает влево и закрывает левую
+        // часть экрана — значит надпись левого исхода должна показываться
+        // СПРАВА. Поэтому в leftEl (визуально слева) лежит метка card.right,
+        // а в rightEl — метка card.left. Подсветка в onMove тоже инвертирована
+        // и попадает ровно туда, куда нужно.
+        if (leftEl)  leftEl.textContent  = single ? outcomeLabel : labelOf(card.right);
+        if (rightEl) rightEl.textContent = single ? outcomeLabel : labelOf(card.left);
 
         requestAnimationFrame(() => {
             requestAnimationFrame(() => {
@@ -533,6 +544,13 @@
         return { x: ev.clientX, y: ev.clientY };
     }
     function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+    // Подпись для левого/правого/outcome исхода. Если автор не указал
+    // label — подставляем "Далее" (часто нужно для outcome-карт типа
+    // "прочитать абзац и листнуть в любую сторону").
+    function labelOf(choice) {
+        if (!choice) return "";
+        return (typeof choice.label === "string" && choice.label) ? choice.label : "Далее";
+    }
     function escapeHtml(s) {
         return String(s).replace(/[&<>"]/g, (c) => (
             { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]

@@ -89,7 +89,60 @@
             forest: {
                 far: "https://ik.imagekit.io/atlantz/jam/forest_far.png",
                 near: "https://ik.imagekit.io/atlantz/jam/forest_near.png",
-            }
+            },
+            forest_mid: {
+                far: "https://ik.imagekit.io/atlantz/jam/forest_mid.png",
+            },
+            forest_bandit: {
+                far: "https://ik.imagekit.io/atlantz/jam/forest_bandit2.png",
+            },
+            forest_deep: {
+                far: "https://ik.imagekit.io/atlantz/jam/forest_deep.png",
+            },
+            bridge: {
+                far: "https://ik.imagekit.io/atlantz/jam/bridge.png",
+            },
+            sword_take: {
+                far: "https://ik.imagekit.io/atlantz/jam/sword_take_far.png",
+                near: "https://ik.imagekit.io/atlantz/jam/sword_take_near.png",
+            },
+            memory_knight: {
+                far: "https://ik.imagekit.io/atlantz/jam/memory/memory_knight.png",
+            },
+            memory_maid: {
+                far: "https://ik.imagekit.io/atlantz/jam/memory/memory_maid.png",
+            },
+            memory_cat: {
+                far: "https://ik.imagekit.io/atlantz/jam/memory/memory_cat.png",
+            },
+            spirit_world: {
+                far: "https://ik.imagekit.io/atlantz/jam/menu_bg.png?updatedAt=1780789788108",
+                near: "https://ik.imagekit.io/atlantz/jam/spirit_world_near.png",
+            },
+            finish_all: {
+                far: "https://ik.imagekit.io/atlantz/jam/finish/all.png",
+            },
+            finish_nobody: {
+                far: "https://ik.imagekit.io/atlantz/jam/finish/nobody.png",
+            },
+            finish_cat: {
+                far: "https://ik.imagekit.io/atlantz/jam/finish/cat.png",
+            },
+            finish_knight: {
+                far: "https://ik.imagekit.io/atlantz/jam/finish/knight.png",
+            },
+            finish_maid: {
+                far: "https://ik.imagekit.io/atlantz/jam/finish/maid.png",
+            },
+            finish_knight_maid: {
+                far: "https://ik.imagekit.io/atlantz/jam/finish/knight_maid.png",
+            },
+            finish_knight_cat: {
+                far: "https://ik.imagekit.io/atlantz/jam/finish/knight_cat.png",
+            },
+            finish_maid_cat: {
+                far: "https://ik.imagekit.io/atlantz/jam/finish/maid_cat.png",
+            },
             // override defaults by providing your own urls — for now the
             // registry-seeded SVG placeholders are used.
         },
@@ -98,6 +151,16 @@
             aurora: {
                 neutral: "https://ik.imagekit.io/atlantz/jam/c/aurora/aurora_neutral.png",
                 dress: "https://ik.imagekit.io/atlantz/jam/c/aurora/aurora_dress.png",
+                wow: "https://ik.imagekit.io/atlantz/jam/c/aurora/aurora_wow.png",
+                fun: "https://ik.imagekit.io/atlantz/jam/c/aurora/aurora_fun.png",
+                mad: "https://ik.imagekit.io/atlantz/jam/c/aurora/aurora_mad.png",
+                sad: "https://ik.imagekit.io/atlantz/jam/c/aurora/aurora_sad.png",
+                knee: "https://ik.imagekit.io/atlantz/jam/c/aurora/aurora_knee.png",
+                kneeCry: "https://ik.imagekit.io/atlantz/jam/c/aurora/aurora_knee_cry.png",
+                kneeWow: "https://ik.imagekit.io/atlantz/jam/c/aurora/aurora_knee_wow.png",
+                kneeSad: "https://ik.imagekit.io/atlantz/jam/c/aurora/aurora_knee_sad.png",
+                kneeThx: "https://ik.imagekit.io/atlantz/jam/c/aurora/aurora_knee_thx.png",
+                kneeWeak: "https://ik.imagekit.io/atlantz/jam/c/aurora/aurora_knee_weak.png"
             },
             councilor: {
                 neutral: "https://ik.imagekit.io/atlantz/jam/c/councilor/councilor_neutral2.png",
@@ -110,14 +173,40 @@
             // aurora: { dreamy: "img/aurora_dreamy.png" },
             knight: {
                 neutral: "https://ik.imagekit.io/atlantz/jam/c/knight/knight_neutral.png",
+                wow: "https://ik.imagekit.io/atlantz/jam/c/knight/knight_wow.png",
+                fun: "https://ik.imagekit.io/atlantz/jam/c/knight/knight_fun.png",
+                mad: "https://ik.imagekit.io/atlantz/jam/c/knight/knight_mad.png",
+                calm: "https://ik.imagekit.io/atlantz/jam/c/knight/knight_calm.png"
                 // proud: "img/knight_proud.png"
             },
             maid: {
-                neutral: "https://ik.imagekit.io/atlantz/jam/c/maid/maid_neutral.png",
+                neutral: "https://ik.imagekit.io/atlantz/jam/c/maid/maid_neutral-2.png",
+                wow: "https://ik.imagekit.io/atlantz/jam/c/maid/maid_wow.png",
+                fun: "https://ik.imagekit.io/atlantz/jam/c/maid/maid_fun.png",
+                mad: "https://ik.imagekit.io/atlantz/jam/c/maid/maid_mad.png",
+                sad: "https://ik.imagekit.io/atlantz/jam/c/maid/maid_sad.png"
             },
             cat: {
                 neutral: "https://ik.imagekit.io/atlantz/jam/c/cat/cat_neutral.png",
+                wow: "https://ik.imagekit.io/atlantz/jam/c/cat/cat_wow.png",
+                fun: "https://ik.imagekit.io/atlantz/jam/c/cat/cat_fun.png",
+                mad: "https://ik.imagekit.io/atlantz/jam/c/cat/cat_mad.png",
+                sad: "https://ik.imagekit.io/atlantz/jam/c/cat/cat_sad.png"
             },
+            witch: {
+                neutral: "https://ik.imagekit.io/atlantz/jam/c/witch/witch_neutral2.png",
+                drink: "https://ik.imagekit.io/atlantz/jam/c/witch/witch_drink2.png",
+            },
+            troll: {
+                neutral: "https://ik.imagekit.io/atlantz/jam/c/troll/troll_neutral.png",
+            },
+            bandits: {
+                neutral: "https://ik.imagekit.io/atlantz/jam/c/bandits/bandits_neutral.png",
+                hide: "__",
+            },
+            spirit: {
+                neutral: "__",
+            }
         },
 
         /* ------------------------------------------------------------
@@ -131,6 +220,10 @@
             "ЛАНСЕЛОТ": "knight",
             "МАРИЯ": "maid",
             "ФАУСТ": "cat",
+            "СТАРУХА": "witch",
+            "ТРОЛЛЬ": "troll",
+            "БАНДИТЫ": "bandits",
+            "ДУХ": "spirit"
         },
 
         minis: {
@@ -266,6 +359,573 @@
                     // },
                 ],
             },
+
+            knight_trial: {
+                bars: [
+                    {id: "hp", icon: "❤", label: "Связь Авроры", value: 100},
+                    {id: "knight_hp", icon: "🛡", label: "Рыцарь", value: 40},
+                ],
+                cards: [
+                    // Карточка 1: Волки
+                    {
+                        id: "knight_wolves",
+                        art: "🐺",
+                        text: "Ты видишь Ланселота, чья нога застряла в капкане, он кричит от боли и тянет руку к тебе, но тут из леса на него несётся стая волков.",
+                        left: {
+                            label: "Бежать отсюда!",
+                            delta: {
+                                knight_hp: -20,
+                            },
+                            onSwipe: (state) => "knight_wolves_ego"
+                        },
+                        right: {
+                            label: "Попробую успеть!",
+                            delta: {
+                                hp: -25,
+                                knight_hp: +20,
+                            },
+                            onSwipe: (state) => "knight_wolves_friend"
+                        }
+                    },
+                    {
+                        id: "knight_wolves_ego",
+                        art: "🩸",
+                        text: "Аврора отступает назад, за спиной раздаются крики рыцаря. Когда она оборачивается, волки уже окружают его. " +
+                            "Ланселот до последнего пытается отбиваться мечом, но стая валит его на землю и крики быстро стихают.",
+                        outcome: {
+                            label: 'Далее',
+                            onSwipe: (state) => "knight_bridge_0"
+                        },
+                    },
+                    {
+                        id: "knight_wolves_friend",
+                        art: "🛡",
+                        text: "Аврора бросается к капкану. Она быстрыми движениями освобождает ногу Ланселоту, но в последний момент один из волков впивается " +
+                            "в ее плечо зубами, оставляя рваную рану. У принцессы темнеет перед глазами, но она помогает подняться рыцарю",
+                        outcome: {
+                            label: 'Далее',
+                            onSwipe: (state) => "knight_bridge_0"
+                        },
+                    },
+                    // Карточка 2: Мост и Рычаг
+                    {
+                        id: "knight_bridge_0",
+                        art: "⛓",
+                        text: "Не успевая опомниться, Аврора и Ланселот оказываются на старом мосту над пропастью, который тут же рушится. " +
+                            "Рыцарь перепрыгивает на другую сторону, но край моста под ним ломается, и он повисает над пропастью. " +
+                            "Взгляд Авроры переключается на рычаг рядом.",
+                        outcome: {
+                            label: 'Далее',
+                        },
+                    },
+                    {
+                        id: "knight_bridge",
+                        art: "⛓",
+                        text: "ДУХ: Этот рычаг активирует платформу, но она выдержит лишь одного и если ты воспользуешься ею сама, " +
+                            "то спасешься, но если отправишь ее к Ланселоту он сможет выжить. " +
+                            "Когда он погиб за тебя, он не колебался, но что же выберешь ты?",
+                        left: {
+                            label: "Направить к себе",
+                            delta: {
+                                knight_hp: -20,
+                            },
+                            onSwipe: (state) => "knight_bridge_ego"
+                        },
+                        right: {
+                            label: "Платформу рыцарю",
+                            delta: {
+                                hp: -20,
+                                knight_hp: +20,
+                            },
+                            onSwipe: (state) => "knight_bridge_friend"
+                        }
+                    },
+                    {
+                        id: "knight_bridge_ego",
+                        art: "🩸",
+                        text: "Аврора активирует платформу для себя и благополучно оказывается на безопасной стороне. " +
+                            "Ланселот, ещё несколько секунд держится за край и срывается вниз. ",
+                        outcome: {
+                            label: 'Далее',
+                            onSwipe: (state) => "knight_sword_choice_0"
+                        },
+                    },
+                    {
+                        id: "knight_bridge_friend",
+                        art: "🛡",
+                        text: "Ланселот взбирается наверх, но в этот момент остатки моста начинают рушиться под Авророй. Она падает вниз. " +
+                            "Последнее, что она видит - это рыцарь, пытающийся дотянуться до неё. ",
+                        outcome: {
+                            label: 'Далее',
+                            onSwipe: (state) => "knight_sword_choice_0"
+                        },
+                    },
+                    // Карточка 3: Выбор Меча
+                    {
+                        id: "knight_sword_choice_0",
+                        art: "🗡",
+                        text: "Аврора падает на каменный пол и оказывается в тронном зале, на пьедестале лежит легендарный меч Артура, " +
+                            "а рядом стоит Ланселот, но его тело постепенно превращается в пепел. ",
+                        outcome: {
+                            label: "Далее",
+                        },
+                    },
+                    {
+                        id: "knight_sword_choice",
+                        art: "🗡",
+                        text: "ДУХ: Именно за этим мечом ты покинула замок и ради твоей цели погиб твой друг. " +
+                            "Сейчас ты можешь получить то, чего желала больше всего. Просто возьми. ",
+                        left: {
+                            label: "Взять меч",
+                            delta: {
+                                knight_hp: -20
+                            },
+                            onSwipe: (state) => "knight_sword_choice_ego"
+                        },
+                        right: {
+                            label: "Бежать к Ланселоту",
+                            delta: {
+                                hp: -25,
+                                knight_hp: +20
+                            },
+                            onSwipe: (state) => "knight_sword_choice_friend"
+                        }
+                    },
+                    {
+                        id: "knight_sword_choice_ego",
+                        art: "🩸",
+                        text: "Меч в руках вспыхивает золотым светом. Ланселот смотрит на нее, печально улыбается, " +
+                            "и его фигура медленно распадается на частицы света. Зал пустеет, оставляя ее совсем одну.",
+                        outcome: {
+                            label: 'Далее',
+                            onSwipe: (state) => state.knight_hp >= 60 ? "knight_finish_friend" : "knight_finish_ego"
+                        },
+                    },
+                    {
+                        id: "knight_sword_choice_friend",
+                        art: "🛡",
+                        text: "Она смотрит на меч в последний раз и подходит к Ланселоту, касаясь его плеча. Меч вспыхивает ослепительным светом и " +
+                            "превращается в золотую пыль, окружая рыцаря и восстанавливая его тело. Взамен тело Авроры начинает становится прозрачным.",
+                        outcome: {
+                            label: 'Далее',
+                            onSwipe: (state) => state.knight_hp >= 60 ? "knight_finish_friend" : "knight_finish_ego"
+                        },
+                    },
+                    {
+                        id: "knight_finish_ego",
+                        art: "🩸",
+                        text: "ДУХ: Ты выбрала меч, все еще цепляясь за свою мечту. Но пока цель для тебя важнее людей, ты не сможешь вернуть тех, " +
+                            "кого потеряла, поэтому я не могу доверить тебе каплю жизни. ",
+                        outcome: {
+                            label: 'Далее',
+                        },
+                    },
+                    {
+                        id: "knight_finish_friend",
+                        art: "🛡",
+                        text: "ДУХ: Каждый раз перед тобой стоял выбор уйти, но ты осталась, рисковала собой, отказалась от собственной мечты. " +
+                            "Поэтому возьми первую каплю жизни. Она принадлежит тому, кто научился ставить чужую жизнь выше собственной.",
+                        outcome: {
+                            label: 'Далее',
+                            onSwipe: (state) => {
+                                window.drops.fill("0")
+                                return true
+                            },
+                        },
+                    },
+                ]
+            },
+            maid_trial: {
+                bars: [
+                    {id: "hp", icon: "❤", label: "Связь Авроры", value: 80},
+                    {id: "maid_hp", icon: "🧹", label: "Служанка", value: 40},
+                ],
+                cards: [
+                    // Карточка 1: Еда в лесу
+                    {
+                        id: "maid_food_0",
+                        art: "🌲",
+                        text: "Оказавшись на лесной опушке, Аврора осмотрелась, ее взгляд остановился на мужчину без сил впереди. " +
+                            "Она уже хотела сделать шаг к нему, как в голове раздался голос, а в животе заурчало, будто она не ела несколько дней.",
+                        outcome: {
+                            label: 'Далее',
+                        },
+                    },
+                    {
+                        id: "maid_food",
+                        art: "🍞",
+                        text: "ДУХ: Когда старушка попросила помощи, ты увидела перед собой лишь помеху. Будучи неимоверно голодной, отдашь ли ты свою последнюю еду другому?",
+                        left: {
+                            label: "Оставить себе",
+                            delta: {
+                                maid_hp: -20,
+                            },
+                            onSwipe: (state) => "maid_food_ego"
+                        },
+                        right: {
+                            label: "Отдать еду",
+                            delta: {
+                                hp: -15,
+                                maid_hp: +20,
+                            },
+                            onSwipe: (state) => "maid_food_friend"
+                        }
+                    },
+                    {
+                        id: "maid_food_ego",
+                        art: "🩸",
+                        text: "Аврора делает несколько шагов назад, оседая. " +
+                            "Она достает кусок хлеба с мясом, начиная есть. " +
+                            "Тупая боль, что держалась все это время наконец исчезает, но, " +
+                            "обернувшись, она понимает что человек вдалеке больше не двигается.",
+                        outcome: {
+                            label: 'Далее',
+                            onSwipe: (state) => "maid_cup_0"
+                        },
+                    },
+                    {
+                        id: "maid_food_friend",
+                        art: "✨",
+                        text: "Аврора дает хлеб и воду ослабшему человеку, и тот принимает свое " +
+                            "спасение дрожащими руками. Принцесса хочет улыбнуться, но ее " +
+                            "пронзает резкая боль и она отшатывается, падая на траву.",
+                        outcome: {
+                            label: 'Далее',
+                            onSwipe: (state) => "maid_cup_0"
+                        },
+                    },
+                    // Карточка 2: Чаша
+                    {
+                        id: "maid_cup_0",
+                        art: "🌫",
+                        text: "Тут деревья растворяются в белом тумане, земля уходит из-под ног, и Аврора оказывается " +
+                            "в просторном каменном зале. Высокие колонны уходят в темноту, а в центре стоит длинный " +
+                            "стол. Рядом сидит маленькая испуганной девочка лет десяти и оглядывается по сторонам.",
+                        outcome: {
+                            label: 'Далее',
+                        },
+                    },
+                    {
+                        id: "maid_cup",
+                        art: "🍷",
+                        text: "ДУХ: Тогда Мария знала, что чаша опасна, не сразу, но поняла, что перед вами не " +
+                            "безобидная старушка. Она знала, что может погибнуть, но все равно не колебалась. " +
+                            "Что же выберешь ты? Пей дите.",
+                        left: {
+                            label: "Выпить самой",
+                            delta: {
+                                hp: -15,
+                                maid_hp: +20,
+                            },
+                            onSwipe: (state) => "maid_cup_friend"
+                        },
+                        right: {
+                            label: "Смотреть",
+                            delta: {
+                                maid_hp: -20,
+                            },
+                            onSwipe: (state) => "maid_cup_ego"
+                        }
+                    },
+                    {
+                        id: "maid_cup_friend",
+                        art: "✨",
+                        text: "Аврора смотрит в темную поверхность напитка, понимая, что находится внутри. " +
+                            "От страха сердце бешено колотится в груди, а перед глазами возникает испуганное, но " +
+                            "решительное лицо Марии. Не сомневаясь, Аврора делает глоток и чувствует, как силы " +
+                            "покидают ее, а мир начинает исчезать.",
+                        outcome: {
+                            label: 'Далее',
+                            onSwipe: (state) => "maid_portal_0"
+                        },
+                    },
+                    {
+                        id: "maid_cup_ego",
+                        art: "🩸",
+                        text: "Аврора остается стоять, поэтому Мария берет чашку и пьет. " +
+                            "Ее глаза медленно закрываются, лицом она падает на стол, не реагируя. " +
+                            "Принцесса, не говоря ни слова смотрит на нее еще несколько секунда, а потом встает и " +
+                            "направляется к выходу.",
+                        outcome: {
+                            label: 'Далее',
+                            onSwipe: (state) => "maid_portal_0"
+                        },
+                    },
+                    // Карточка 3: Портал
+                    {
+                        id: "maid_portal_0",
+                        art: "🌸",
+                        text: "Когда Аврора открывает глаза снова она видит сад того самого замка где находилась. " +
+                            "В центре сада лежит ее Мария, та что росла с ней все эти годы. " +
+                            "Принцесса хочет потрепать ее по плечу, но тут перед ней открывается огромный портал, " +
+                            "где видна ее родная комната.",
+                        outcome: {
+                            label: "Далее",
+                        },
+                    },
+                    {
+                        id: "maid_portal",
+                        art: "🚪",
+                        text: "ДУХ: Ты хочешь вернуть ее? Но готова ли отказаться от свободы? У тебя есть выбор: уйти или разбудить ее.",
+                        left: {
+                            label: "Я не уйду без нее",
+                            delta: {
+                                hp: -15,
+                                maid_hp: +20
+                            },
+                            onSwipe: (state) => "maid_portal_friend"
+                        },
+                        right: {
+                            label: "Это обман! Это не мария - иллюзия",
+                            delta: {
+                                maid_hp: -20
+                            },
+                            onSwipe: (state) => "maid_portal_ego"
+                        }
+                    },
+                    {
+                        id: "maid_portal_friend",
+                        art: "✨",
+                        text: "Аврора смотрит на открытую дверь, там, вдалеке выход, достаточно лишь сделать " +
+                            "несколько шагов. Но она переводит взгляд на Марию, что неподвижно лежит среди цветов. " +
+                            "Она садится рядом, отмахиваясь от портала.",
+                        outcome: {
+                            label: 'Далее',
+                            onSwipe: (state) => state.maid_hp >= 60 ? "maid_finish_friend" : "maid_finish_ego"
+                        },
+                    },
+                    {
+                        id: "maid_portal_ego",
+                        art: "🩸",
+                        text: "Аврора долго смотрит на Марию, пока та мирно спит среди белых цветов, совсем как " +
+                            "после проклятого вина. Сердце болезненно сжимается. " +
+                            "Ей хочется подойти ближе, взять подругу за руку, разбудить ее, но ведь это всего лишь " +
+                            "иллюзия, верно? Она медленно встает и, не оборачиваясь, идет к выходу.",
+                        outcome: {
+                            label: 'Далее',
+                            onSwipe: (state) => state.maid_hp >= 60 ? "maid_finish_friend" : "maid_finish_ego"
+                        },
+                    },
+                    {
+                        id: "maid_finish_ego",
+                        art: "🩸",
+                        text: "ДУХ: Ты видела чужую нужду, но выбирала себя, проходя мимо. " +
+                            "Я не могу доверить тебе вторую каплю жизни, она предназначена тому, кто понимает что " +
+                            "доброта требует жертв, что чужая жизнь может быть " +
+                            "не менее важна, чем собственная.",
+                        outcome: {
+                            label: 'Далее',
+                        },
+                    },
+                    {
+                        id: "maid_finish_friend",
+                        art: "✨",
+                        text: "ДУХ: Ты помогала тем, кто был слабее тебя, рискуя, оставалась рядом, даже когда " +
+                            "проще было уйти. Возьми вторую каплю жизни, она принадлежит тому, " +
+                            "кто научился видеть в людях не слуг, не незнакомцев и не препятствия " +
+                            "на пути к цели, а тех, чья жизнь так же ценна, как и собственная.",
+                        outcome: {
+                            label: 'Далее',
+                            onSwipe: (state) => {
+                                window.drops.fill("1")
+                                return true
+                            },
+                        },
+                    },
+                ]
+            },
+            cat_trial: {
+                bars: [
+                    {id: "hp", icon: "❤", label: "Связь Авроры", value: 60},
+                    {id: "cat_hp", icon: "🐾", label: "Кот", value: 40},
+                ],
+                cards: [
+                    // Карточка 1: Тропа
+                    {
+                        id: "cat_path_0",
+                        art: "🌲",
+                        text: "Аврора снова оказывается на лесной тропе. На поваленном дереве сидит Фауст, " +
+                            "увидев ее, он поднимает голову, машет хвостом, словно приглашая следовать за ним. " +
+                            "Через несколько минут он приводит ее на распутье, дорога разделяется на две " +
+                            "тропы: одна широкая и удобная, другая узкая и заросшая кустами.",
+                        outcome: {
+                            label: 'Далее',
+                        },
+                    },
+                    {
+                        id: "cat_path",
+                        art: "🔀",
+                        text: "ДУХ: Фауст не раз пытался предупреждал тебя об опасноситях, но ты " +
+                            "предпочитала поступать по-своему. Сможешь ли ты довериться чужому совету в " +
+                            "этот раз?",
+                        left: {
+                            label: "Пойти по широкой дороге",
+                            delta: {
+                                cat_hp: -20,
+                            },
+                            onSwipe: (state) => "cat_path_ego"
+                        },
+                        right: {
+                            label: "Пойти за Фаустом",
+                            delta: {
+                                hp: -15,
+                                cat_hp: +20,
+                            },
+                            onSwipe: (state) => "cat_path_friend"
+                        }
+                    },
+                    {
+                        id: "cat_path_ego",
+                        art: "🩸",
+                        text: "Аврора выбирает удобную дорогу, уверенная в своей правоте, но через " +
+                            "некоторое время земля под её ногами проваливается, и она оказывается в " +
+                            "тупике и застревает.",
+                        outcome: {
+                            label: 'Далее',
+                            onSwipe: (state) => "cat_mirrors_0"
+                        },
+                    },
+                    {
+                        id: "cat_path_friend",
+                        art: "✨",
+                        text: "Аврора идет за котом через колючие кусты и грязь. Путь оказывается сложнее, " +
+                            "но вскоре они выходят прямо к саду, где она появилась впервые.",
+                        outcome: {
+                            label: 'Далее',
+                            onSwipe: (state) => "cat_mirrors_0"
+                        },
+                    },
+                    // Карточка 2: Зеркала
+                    {
+                        id: "cat_mirrors_0",
+                        art: "🪞",
+                        text: "Лес снова исчезает. Аврора оказывается в круглой комнате, заполненной зеркалами " +
+                            "и в каждом отражении она видит один из своих поступков: спор с Ланселотом, " +
+                            "разговор со старухой, мост с хранителем.",
+                        outcome: {
+                            label: 'Далее',
+                        },
+                    },
+                    {
+                        id: "cat_mirrors",
+                        art: "👁",
+                        text: "ДУХ: Ошибки становятся уроками лишь тогда, когда " +
+                            "человек способен признать их своими.",
+                        left: {
+                            label: "Это вина других",
+                            delta: {
+                                cat_hp: -20,
+                            },
+                            onSwipe: (state) => "cat_mirrors_ego"
+                        },
+                        right: {
+                            label: "Это моя вина",
+                            delta: {
+                                hp: -15,
+                                cat_hp: +20,
+                            },
+                            onSwipe: (state) => "cat_mirrors_friend"
+                        }
+                    },
+                    {
+                        id: "cat_mirrors_ego",
+                        art: "🩸",
+                        text: "Аврора отворачивается от зеркал. Отражения начинают трескаться, а " +
+                            "вместе с этим и гаснет свет в комнате.",
+                        outcome: {
+                            label: 'Далее',
+                            onSwipe: (state) => "cat_bridge_0"
+                        },
+                    },
+                    {
+                        id: "cat_mirrors_friend",
+                        art: "✨",
+                        text: "Аврора заставляет себя смотреть и раз за разом наблюдать со " +
+                            "стороны свои действия.",
+                        outcome: {
+                            label: 'Далее',
+                            onSwipe: (state) => "cat_bridge_0"
+                        },
+                    },
+                    // Карточка 3: Мост вина
+                    {
+                        id: "cat_bridge_0",
+                        art: "⛓",
+                        text: "Зеркала растворяются, и Аврора вновь оказывается перед мостом. " +
+                            "Тем самым мостом, где погиб Фауст. Кот сидит на перилах и смотрит на нее " +
+                            "будто с грустью.",
+                        outcome: {
+                            label: "Далее",
+                        },
+                    },
+                    {
+                        id: "cat_bridge",
+                        art: "❓",
+                        text: "ДУХ: Кто виноват в смерти твоих друзей?",
+                        left: {
+                            label: "Все",
+                            delta: {
+                                cat_hp: -20
+                            },
+                            onSwipe: (state) => "cat_bridge_ego"
+                        },
+                        right: {
+                            label: "Я сама",
+                            delta: {
+                                hp: -15,
+                                cat_hp: +20
+                            },
+                            onSwipe: (state) => "cat_bridge_friend"
+                        }
+                    },
+                    {
+                        id: "cat_bridge_ego",
+                        art: "🩸",
+                        text: "Аврора начинает перечислять бандитов, старуху, хранителя моста и судьбу. " +
+                            "Фауст печально опускает голову и растворяется в воздухе.",
+                        outcome: {
+                            label: 'Далее',
+                            onSwipe: (state) => state.cat_hp >= 60 ? "cat_finish_friend" : "cat_finish_ego"
+                        },
+                    },
+                    {
+                        id: "cat_bridge_friend",
+                        art: "✨",
+                        text: "Аврора долго молчит, а затем указывает пальцем на себя. " +
+                            "Принцесса понимает, друзья пытались помочь ей, но она сама раз за разом " +
+                            "отвергала их советы. Фауст довольно взмахивает хвостом и спрыгивает с перил.",
+                        outcome: {
+                            label: 'Далее',
+                            onSwipe: (state) => state.cat_hp >= 60 ? "cat_finish_friend" : "cat_finish_ego"
+                        },
+                    },
+                    {
+                        id: "cat_finish_ego",
+                        art: "🩸",
+                        text: "ДУХ: Ты по-прежнему ищешь виноватых. " +
+                            "Помни, что пока человек обвиняет других в собственных ошибках, " +
+                            "он остается пленником одних и тех же решений. Поэтому я не могу доверить тебе " +
+                            "каплю жизни в этот раз. Она предназначена тому, кто способен честно взглянуть на себя.",
+                        outcome: {
+                            label: 'Далее',
+                        },
+                    },
+                    {
+                        id: "cat_finish_friend",
+                        art: "✨",
+                        text: "ДУХ: Ты научилась слушать других, признавать свои ошибки и отвечать за " +
+                            "последствия собственных решений. Возьми каплю жизни. Она принадлежит тому, " +
+                            "кто нашёл в себе смелость сказать: “Я была неправа”.",
+                        outcome: {
+                            label: 'Далее',
+                            onSwipe: (state) => {
+                                window.drops.fill("2")
+                                return true
+                            },
+                        },
+                    },
+                ]
+            },
         },
     };
 
@@ -281,6 +941,7 @@
         {name: "speakers", target: () => window.speakers},
         {name: "parallax", target: () => window.parallax},
         {name: "observers", target: () => window.observers},
+        {name: "end", target: () => window.end},
         {name: "main", target: () => window.Game, method: "start"},
     ];
 

@@ -5,6 +5,15 @@
    ============================================================ */
 @import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Marcellus&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Tangerine:wght@700&display=swap');
 
+/* Регистрируем --gg-opacity как <number>, чтоб transition умел его плавно
+   анимировать. Без этого браузер просто перепрыгивает между значениями,
+   и градиентная маска ГГ "щёлкает" вместо мягкого выцветания. */
+@property --gg-opacity {
+    syntax: '<number>';
+    inherits: true;
+    initial-value: 1;
+}
+
 :root {
     /* ---------- Palette ---------- */
     --c-night-0:        #03050f;
