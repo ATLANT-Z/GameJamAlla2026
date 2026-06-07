@@ -268,32 +268,61 @@
 
         chunks.forEach((chunkHtml) => {
             // ============================================================
-            // ЗВУК: id [, id2, id3] — служебная "реплика". Не показывается
-            // в диалоге, а сразу проигрывает звук(и) через sound.play().
-            // Несколько id через запятую — играются по очереди.
-            //   ЗВУК: thunder @@@
-            //   ЗВУК: thunder, lightning @@@
-            // Поддерживаем также латинский SOUND:.
-            // Парсим по plain-тексту чанка (HTML-теги выкинуты), чтоб
-            // Twine-обёртки не мешали.
+            // Служебные реплики звукового модуля — не показываются в
+            // диалоге, парсер их "съедает" и едет дальше.
+            //
+            //   ЗВУК: thunder @@@                — SFX (играет параллельно)
+            //   ЗВУК: thunder, lightning @@@     — SFX по очереди
+            //   МУЗЫКА: forest @@@               — музыкальный слот (crossfade)
+            //   МУЗЫКА: stop @@@   или   МУЗЫКА: - @@@   — погасить музыку
+            //
+            // Поддерживаем латинские синонимы SOUND: / MUSIC:.
+            // Парсим plain-текст (HTML-теги выкинуты), чтоб Twine-обёртки не мешали.
             // ============================================================
             const plain = chunkHtml.replace(/<[^>]+>/g, "").replace(/&nbsp;/gi, " ").trim();
+
+            // ---- ЗВУК / SOUND ----
+            // ВАЖНО: НЕ играем звук прямо здесь (на этапе парсинга). Если так
+            // делать — все ЗВУК-реплики из пассажа выстреливают залпом, едва
+            // он отрисовался. Вместо этого кладём маркер в lines —
+            // dialog.js поймёт {_sound: [...]} и сыграет в тот момент,
+            // когда дойдёт ход по очереди реплик.
             const soundMatch = plain.match(/^(?:ЗВУК|SOUND)\s*:\s*(.+)$/i);
             if (soundMatch) {
                 const ids = soundMatch[1]
                     .split(",")
                     .map((s) => s.trim())
                     .filter(Boolean);
-                if (ids.length && window.sound && typeof window.sound.play === "function") {
-                    try {
-                        window.sound.play(ids.length === 1 ? ids[0] : ids);
-                    } catch (e) {
-                        console.error("[main] ЗВУК: play упал:", e);
-                    }
-                } else if (!ids.length) {
+                if (ids.length) {
+                    lines.push({ _sound: ids });
+                } else {
                     console.warn("[main] ЗВУК: пустой список id в реплике");
                 }
-                return; // в lines не добавляем — реплика "съедена"
+                return;
+            }
+
+            // ---- МУЗЫКА / MUSIC (многослотовая) ----
+            // Синтаксис:
+            //   МУЗЫКА: id            — слот "main"
+            //   МУЗЫКА.wind: id       — слот "wind"
+            //   МУЗЫКА: stop          — погасить main
+            //   МУЗЫКА.wind: stop     — погасить wind
+            //   МУЗЫКА: stop all      — погасить ВСЕ слоты
+            //   МУЗЫКА: -             — алиас stop
+            // Аналогично — маркер, фактический crossfade случится когда
+            // dialog.js доберётся до этой "строки".
+            const musicMatch = plain.match(
+                /^(?:МУЗЫКА|MUSIC)(?:\.([a-zA-Zа-яА-Я_][a-zA-Zа-яА-Я0-9_]*))?\s*:\s*(.+)$/i
+            );
+            if (musicMatch) {
+                const slot = (musicMatch[1] || "main").trim();
+                const arg  = musicMatch[2].trim();
+                if (arg) {
+                    lines.push({ _music: arg, _musicSlot: slot });
+                } else {
+                    console.warn("[main] МУЗЫКА: пустой аргумент");
+                }
+                return;
             }
 
             const line = parseChunk(chunkHtml, sourceEl);

@@ -96,6 +96,53 @@
         const line = currentLines[currentIndex];
         if (!line) return;
 
+        // ============================================================
+        // Маркеры от main.js — НЕ диалог, а команды звуковому модулю.
+        // {_sound: ["id"...]} → sound.play(...)
+        // {_music: "id" | "stop"} → sound.music(...) / stopMusic()
+        // Срабатывают в тот момент, когда до них дошла очередь реплик.
+        // Никакой типизации, никакого ожидания клика — автоматически
+        // едем к следующей строке.
+        // ============================================================
+        if (line._sound) {
+            try {
+                if (window.sound && typeof window.sound.play === "function") {
+                    const ids = line._sound;
+                    window.sound.play(ids.length === 1 ? ids[0] : ids);
+                } else {
+                    console.warn("[dialog] _sound: модуль sound не подключён");
+                }
+            } catch (e) {
+                console.error("[dialog] _sound fire:", e);
+            }
+            return autoAdvance(token);
+        }
+        if (line._music) {
+            try {
+                if (window.sound) {
+                    const arg  = line._music;
+                    const slot = line._musicSlot || "main";
+                    // "stop all" — погасить ВСЕ слоты
+                    if (/^stop\s+all$/i.test(arg) || /^all$/i.test(arg)) {
+                        if (typeof window.sound.stopAllMusic === "function") {
+                            window.sound.stopAllMusic();
+                        }
+                    } else if (/^(?:stop|off|-)$/i.test(arg)) {
+                        if (typeof window.sound.stopMusic === "function") {
+                            window.sound.stopMusic(slot);
+                        }
+                    } else if (typeof window.sound.music === "function") {
+                        window.sound.music(arg, { slot });
+                    }
+                } else {
+                    console.warn("[dialog] _music: модуль sound не подключён");
+                }
+            } catch (e) {
+                console.error("[dialog] _music fire:", e);
+            }
+            return autoAdvance(token);
+        }
+
         // Notify subscribers (speakers.js auto-shows NPCs etc.)
         try {
             window.dispatchEvent(new CustomEvent("dialog:line", { detail: {
@@ -131,6 +178,22 @@
             if (r.hint) r.hint.classList.add("is-visible");
             awaitingClick = true;
         }
+    }
+
+    // Авто-перемотка после маркер-строки (звук / музыка). Если это последняя
+    // строка пассажа — рендерим choices, как обычно делает playLine для last.
+    function autoAdvance(token) {
+        if (token !== renderToken) return;
+        const isLast = currentIndex >= currentLines.length - 1;
+        if (isLast) {
+            if (currentChoices && currentChoices.length) {
+                renderChoices(currentChoices);
+            }
+            awaitingClick = false;
+            return;
+        }
+        currentIndex++;
+        return playLine(token);
     }
 
     function advance() {

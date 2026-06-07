@@ -19,6 +19,14 @@
 (function () {
     "use strict";
 
+    hp.set(100);
+    drops.show();
+    bg.set("sword_take")
+    sound.stopAllMusic();
+    sound.music("s_wind_grass", {slot: "bg"});
+    sound.music("m_the_end");
+
+
     /* ============================================================
    game-config.js — CONTENT registry.
    Edit this file to register backgrounds, character emotions and
@@ -82,6 +90,14 @@
    ============================================================ */
     window.GameConfig = {
         backgrounds: {
+            sword_take: {
+                far: "https://ik.imagekit.io/atlantz/jam/sword_take_far.png",
+                near: "https://ik.imagekit.io/atlantz/jam/sword_take_near.png",
+            },
+            spirit_world: {
+                far: "https://ik.imagekit.io/atlantz/jam/menu_bg.png?updatedAt=1780789788108",
+                near: "https://ik.imagekit.io/atlantz/jam/spirit_world_near.png",
+            },
             castle: {
                 far: "https://ik.imagekit.io/atlantz/jam/castle_far.jpg",
                 near: "https://ik.imagekit.io/atlantz/jam/castle_near.png",
@@ -102,10 +118,6 @@
             bridge: {
                 far: "https://ik.imagekit.io/atlantz/jam/bridge.png",
             },
-            sword_take: {
-                far: "https://ik.imagekit.io/atlantz/jam/sword_take_far.png",
-                near: "https://ik.imagekit.io/atlantz/jam/sword_take_near.png",
-            },
             memory_knight: {
                 far: "https://ik.imagekit.io/atlantz/jam/memory/memory_knight.png",
             },
@@ -114,10 +126,6 @@
             },
             memory_cat: {
                 far: "https://ik.imagekit.io/atlantz/jam/memory/memory_cat.png",
-            },
-            spirit_world: {
-                far: "https://ik.imagekit.io/atlantz/jam/menu_bg.png?updatedAt=1780789788108",
-                near: "https://ik.imagekit.io/atlantz/jam/spirit_world_near.png",
             },
             finish_all: {
                 far: "https://ik.imagekit.io/atlantz/jam/finish/all.png",
@@ -238,7 +246,77 @@
            Реплика "ЗВУК: …" в диалоге НЕ показывается — это просто
            команда звуковому модулю, парсер сразу едет дальше.
            ------------------------------------------------------------ */
+        // sound.play("sword")                  // одиночный
+        // sound.play(["a","b","c"])            // очередь
+        // sound.play("amb", { fadeIn: 800 })   // плавный въезд
+        //
+        // sound.stop("amb")                    // мгновенно
+        // sound.stop("amb", { fadeMs: 600 })   // с затуханием
+        // sound.stopAll({ fadeMs: 400 })
+        // MUSIC (новое — один слот, auto-crossfade):
+        //
+        // sound.music("forest")                       // включить (loop=true по умолчанию)
+        // sound.music("battle")                       // crossfade: forest fade-out + battle fade-in
+        // sound.music("battle", { fade: 1500 })       // fade 1.5 сек
+        // sound.music("battle", { fadeIn: 1200, fadeOut: 600 })  // раздельно
+        // sound.music("forest")                       // если "forest" и так играет — no-op
+        // sound.stopMusic()                           // fade-out текущей (800мс)
+        // sound.stopMusic({ fade: 0 })                // мгновенно
+        // sound.currentMusic()                        // → "forest" | null
+
         sounds: {
+            s_wind_leafs: {
+                src: "https://mcdn.podbean.com/mf/web/wnbe3bbxfsaubxgr/s_wind_leafs.mp3",
+                volume: 0.4,
+                loop: true
+            },
+            s_wind_grass: {
+                src: "https://mcdn.podbean.com/mf/web/z58cyajifzcskc2c/s_wind_grass.mp3",
+                volume: 0.4,
+                loop: true
+            },
+            sTroll: {src: "https://mcdn.podbean.com/mf/web/zyrm7tabcqad6uhs/s_troll.mp3", volume: 0.5},
+            sSwordUp: {src: "https://mcdn.podbean.com/mf/web/iivb56tncgkbisru/s_sword_up.mp3", volume: 0.6},
+            sSword: {src: "https://mcdn.podbean.com/mf/web/t3srsduyie934gj5/s_sword.mp3", volume: 0.6},
+            sMew: {src: "https://mcdn.podbean.com/mf/web/39e8k5fiata9du8z/s_mew.mp3", volume: 0.7},
+            sHurt: {src: "https://mcdn.podbean.com/mf/web/7sgwizr9vsmga97f/s_hurt.mp3", volume: 0.6},
+            sCricket: {src: "https://mcdn.podbean.com/mf/web/szu7msamydq4nesz/s_cricket.mp3", volume: 0.4},
+            m_the_end: {
+                src: "https://mcdn.podbean.com/mf/web/gprkr3sxcz4mymbb/m_the_end.mp3",
+                volume: 0.5,
+                loop: true
+            },
+            m_spirit_world: {
+                src: "https://mcdn.podbean.com/mf/web/ri4swtrm2u5s962g/m_spirit_world.mp3",
+                volume: 0.5,
+                loop: true
+            },
+            m_main_theme: {
+                src: "https://mcdn.podbean.com/mf/web/zd7izj24irjg4dgr/m_main_theme.mp3",
+                volume: 0.5,
+                loop: true
+            },
+            m_hall_1: {
+                src: "https://mcdn.podbean.com/mf/web/akzscfihkcxy6ms3/m_hall_1.mp3",
+                volume: 0.5,
+                loop: true
+            },
+            m_forest_light: {
+                src: "https://mcdn.podbean.com/mf/web/icyxqkh5h4428f5x/m_forest_light.mp3",
+                volume: 0.5,
+                loop: true
+            },
+            m_forest_deep: {
+                src: "https://mcdn.podbean.com/mf/web/bfbkmrjr35dry2u3/m_forest_deep.mp3",
+                volume: 0.5,
+                loop: true
+            },
+            m_fight: {
+                src: "https://mcdn.podbean.com/mf/web/dki6g2nmp87n4hya/m_fight.mp3",
+                volume: 0.5,
+                loop: true
+            },
+
             // Примеры — замени на свои URL'ы:
             // thunder:  { src: "audio/thunder.mp3", volume: 0.8 },
             // ambient:  { src: "audio/forest.mp3",  volume: 0.3, loop: true },

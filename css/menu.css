@@ -637,10 +637,132 @@
     text-shadow: 0 0 12px rgba(212, 166, 74, .35);
 }
 
+/* Имена-ссылки на Telegram внутри ролей. Деликатный gold-underline,
+   проявляется на hover. Никакого decoration по умолчанию. */
+.credits__link {
+    color: var(--c-gold-0);
+    text-decoration: none;
+    position: relative;
+    padding-bottom: 1px;
+    background-image: linear-gradient(90deg, var(--c-gold-2), var(--c-gold-2));
+    background-repeat: no-repeat;
+    background-size: 0% 1px;
+    background-position: 0 100%;
+    transition: background-size 280ms var(--ease-soft),
+                color           220ms var(--ease-soft),
+                text-shadow     220ms var(--ease-soft);
+}
+
+.credits__link:hover,
+.credits__link:focus-visible {
+    color: var(--c-gold-0);
+    background-size: 100% 1px;
+    text-shadow:
+        0 0 16px rgba(255, 242, 193, .65),
+        0 0 4px rgba(255, 242, 193, .35);
+    outline: none;
+}
+
+/* Строка-стикер для "Наставников" — без role-колонки слева, имена по центру. */
+.credits__row--inline {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    text-align: center;
+    padding: 10px 0 4px;
+}
+
+.credits__row--inline .credits__name {
+    font-size: 18px;
+    letter-spacing: .02em;
+}
+
+/* ============================================================
+   TELEGRAM-СЕТКА — карточки "Имя / @ник", кликабельные.
+   ============================================================ */
+.credits__group--handles {
+    margin-bottom: 18px;
+}
+
+.credits__handles {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 10px;
+    margin-top: 8px;
+}
+
+.credits__handle {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 12px 14px;
+    border: 1px solid var(--line-gold);
+    background: linear-gradient(180deg,
+        rgba(10, 14, 36, .55),
+        rgba(6, 10, 28, .7));
+    border-radius: 3px;
+    text-decoration: none;
+    box-shadow: var(--sheen-inner);
+    transition: transform    280ms var(--ease-soft),
+                border-color 280ms var(--ease-soft),
+                box-shadow   320ms var(--ease-soft),
+                background   320ms var(--ease-soft);
+}
+
+.credits__handle:hover,
+.credits__handle:focus-visible {
+    border-color: var(--line-gold-strong);
+    box-shadow: var(--sheen-inner),
+                var(--glow-gold-strong),
+                0 6px 18px rgba(0, 0, 0, .45);
+    transform: translateY(-1px);
+    outline: none;
+    background: linear-gradient(180deg,
+        rgba(20, 28, 64, .7),
+        rgba(10, 18, 48, .8));
+}
+
+.credits__handle-name {
+    font-family: var(--font-heading);
+    font-size: 16px;
+    color: var(--c-gold-0);
+    letter-spacing: .04em;
+    text-shadow: 0 0 10px rgba(212, 166, 74, .35);
+}
+
+.credits__handle-tag {
+    font-family: var(--font-body);
+    font-size: 13px;
+    color: var(--c-text-dim);
+    letter-spacing: .03em;
+    transition: color 220ms var(--ease-soft);
+}
+
+.credits__handle:hover .credits__handle-tag,
+.credits__handle:focus-visible .credits__handle-tag {
+    color: var(--c-moon-2);
+}
+
 .credits__footer {
     display: flex;
     justify-content: center;
     margin-top: 32px;
+}
+
+/* ============================================================
+   CREDITS — мобильная подгонка
+   ============================================================ */
+@media (max-width: 540px) {
+    .credits__row {
+        grid-template-columns: 1fr;
+        gap: 4px;
+        padding: 10px 0;
+    }
+    .credits__role {
+        text-align: left;
+    }
+    .credits__handles {
+        grid-template-columns: 1fr 1fr;
+    }
 }
 
 /* ============================================================

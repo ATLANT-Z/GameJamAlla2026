@@ -16,7 +16,6 @@
     transform: translate3d(var(--px, 0), var(--py, 0), 0);
 }
 
-.bg__layer--far  { filter: blur(2px) saturate(.9) brightness(.7);  }
 .bg__layer--near { filter: saturate(1.05) brightness(.85);          }
 
 /* Fallback look until bg.set() is called — pretty night-sky gradient */
@@ -26,13 +25,9 @@
         radial-gradient(ellipse at 70% 30%, rgba(220,150,200,.25), transparent 60%),
         linear-gradient(180deg, #1a2046 0%, #0b1230 60%, #060a1c 100%);
 }
-.bg__layer--near:not([style*="background-image"]) {
-    background:
-        radial-gradient(ellipse at 50% 90%, rgba(20,30,70,.85), transparent 70%),
-        linear-gradient(180deg, transparent 0%, rgba(6,10,28,.4) 70%, rgba(6,10,28,.95) 100%);
-}
 
 .bg__vignette {
+    display: none !important;
     position: absolute;
     inset: 0;
     background:
