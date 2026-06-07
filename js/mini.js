@@ -41,6 +41,11 @@
         // карту вместо обычного pickNextCard.
         pendingNextId: null,
 
+        // id-шник таймера на следующий dealNext (взвод после commitSwipe).
+        // Хранится тут, чтобы stop()/start() могли его сбросить и не получить
+        // «осиротевший» вызов dealNext поверх новой колоды.
+        dealTimer: 0,
+
         dragging: false,
         startX: 0,
         startY: 0,
@@ -129,9 +134,18 @@
         });
         STATE.deck = cardsCopy.slice();
         STATE.pendingNextId = null;
+        // На всякий случай гасим висящий таймер с прошлой игры — иначе он
+        // съест карту из новой колоды.
+        if (STATE.dealTimer) { clearTimeout(STATE.dealTimer); STATE.dealTimer = 0; }
 
         STATE.running = true;
         resolveRefs();
+        if (!cardEl) {
+            console.error(
+                "[mini.start] в DOM нет [data-mini-card] — мини-игра не сможет показать карту. " +
+                "Проверь разметку index.html."
+            );
+        }
         bindCardListeners();    // re-bind drag to the current cardEl
         renderBars();
         if (root) root.classList.remove("mini--hidden");
@@ -150,6 +164,7 @@
         STATE.currentSide = null;
         STATE.pendingNextId = null;
         STATE.dragging = false;
+        if (STATE.dealTimer) { clearTimeout(STATE.dealTimer); STATE.dealTimer = 0; }
         if (root) root.classList.add("mini--hidden");
         clearBarHints();
         if (leftEl)  leftEl.classList.remove("is-active");
@@ -219,8 +234,18 @@
             b.value = clamp(b.value + d, b.min, b.max);
             if (BAR_STORE[id]) BAR_STORE[id].value = b.value;
             updateBarVisual(id);
-            if (prev > 0 && b.value === 0 && STATE.config.onBarZero) {
-                try { STATE.config.onBarZero(id); } catch (e) { console.error(e); }
+            if (prev > 0 && b.value === 0) {
+                if (STATE.config && typeof STATE.config.onBarZero === "function") {
+                    try { STATE.config.onBarZero(id); } catch (e) { console.error(e); }
+                }
+                // Глобальное событие — было заявлено в шапке файла, но раньше
+                // никогда не диспатчилось. Слушатели mini:complete могут
+                // среагировать на конкретную шкалу.
+                dispatchEvt("mini:complete", {
+                    id: STATE.currentId,
+                    reason: "barZero",
+                    barId: id,
+                });
             }
         });
     }
@@ -471,7 +496,9 @@
             }
         }
 
-        setTimeout(() => {
+        if (STATE.dealTimer) clearTimeout(STATE.dealTimer);
+        STATE.dealTimer = setTimeout(() => {
+            STATE.dealTimer = 0;
             if (!STATE.running) return;
             dealNext();
         }, 720);
@@ -518,7 +545,13 @@
         stop,
         setBar(id, v) {
             const b = STATE.bars.find((x) => x.id === id);
-            if (b) { b.value = clamp(v, b.min, b.max); updateBarVisual(id); }
+            if (!b) return;
+            b.value = clamp(v, b.min, b.max);
+            // BAR_STORE — единственный источник правды между запусками
+            // мини-игр. Если setBar не пишет туда, следующий tutorial
+            // увидит устаревшее значение. Чиним десинк.
+            if (BAR_STORE[id]) BAR_STORE[id].value = b.value;
+            updateBarVisual(id);
         },
         getState: snapshotState,
         isRunning: () => STATE.running,

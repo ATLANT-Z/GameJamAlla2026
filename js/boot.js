@@ -85,6 +85,10 @@
             castle: {
                 far: "https://ik.imagekit.io/atlantz/jam/castle_far.jpg",
                 near: "https://ik.imagekit.io/atlantz/jam/castle_near.png",
+            },
+            forest: {
+                far: "https://ik.imagekit.io/atlantz/jam/forest_far.png",
+                near: "https://ik.imagekit.io/atlantz/jam/forest_near.png",
             }
             // override defaults by providing your own urls — for now the
             // registry-seeded SVG placeholders are used.
