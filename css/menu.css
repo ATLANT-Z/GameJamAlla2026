@@ -131,28 +131,33 @@
    ============================================================ */
 .menu-stars {
     position: fixed;
-    z-index: 2;
+    z-index: 999;
     inset: -3%;
     pointer-events: none;
     transform: translate(var(--px, 0), var(--py, 0));
-    background: radial-gradient(1px 1px at 12% 22%, var(--c-gold-0) 0, transparent 100%),
-    radial-gradient(1px 1px at 24% 68%, var(--c-arcane) 0, transparent 100%),
-    radial-gradient(1px 1px at 36% 14%, var(--c-moon-2) 0, transparent 100%),
-    radial-gradient(1px 1px at 78% 30%, var(--c-gold-1) 0, transparent 100%),
-    radial-gradient(1px 1px at 88% 76%, var(--c-moon-3) 0, transparent 100%),
-    radial-gradient(1px 1px at 54% 88%, var(--c-arcane) 0, transparent 100%),
-    radial-gradient(1px 1px at 64% 44%, var(--c-gold-0) 0, transparent 100%),
-    radial-gradient(2px 2px at 18% 82%, rgba(255, 242, 193, .9) 0, transparent 100%),
-    radial-gradient(2px 2px at 92% 18%, rgba(184, 162, 255, .9) 0, transparent 100%);
-    animation: stars-twinkle 5.2s var(--ease-soft) infinite;
+    background: radial-gradient(4px 4px at 12% 22%, var(--c-gold-0) 0, transparent 100%),
+    radial-gradient(4px 4px at 24% 68%, var(--c-arcane) 0, transparent 100%),
+    radial-gradient(4px 4px at 36% 14%, var(--c-moon-2) 0, transparent 100%),
+    radial-gradient(4px 4px at 78% 30%, var(--c-gold-1) 0, transparent 100%),
+    radial-gradient(4px 4px at 88% 76%, var(--c-moon-3) 0, transparent 100%),
+    radial-gradient(4px 4px at 54% 88%, var(--c-arcane) 0, transparent 100%),
+    radial-gradient(4px 4px at 64% 44%, var(--c-gold-0) 0, transparent 100%),
+    radial-gradient(6px 6px at 18% 82%, rgba(255, 242, 193, .9) 0, transparent 100%),
+    radial-gradient(6px 6px at 92% 18%, rgba(184, 162, 255, .9) 0, transparent 100%);
+    animation: stars-twinkle 8s var(--ease-soft) infinite;
 }
 
 @keyframes stars-twinkle {
     0%, 100% {
-        opacity: .55;
+        transform: translate(calc(4px + var(--px, 0)), calc(var(--py, 0)));
+        opacity: .5;
+    }
+    25% {
+        transform: translate(calc(4px + var(--px, 0)), calc(4px + var(--py, 0)));
     }
     50% {
         opacity: 1;
+        transform: translate(var(--px, 0), var(--py, 0));
     }
 }
 
@@ -179,7 +184,7 @@
     position: fixed;
     z-index: 4;
     inset: 0;
-    transform: var(--content-base) translate(var(--px, 0), var(--py, 0));
+    transform: var(--content-base, scale(1)) translate(var(--px, 0), var(--py, 0));
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -245,6 +250,7 @@
 .menu-title__line--top.line {
     top: 0;
 }
+
 .menu-title__line--bot.line {
     bottom: 0;
 }
@@ -351,11 +357,22 @@
    КНОПКИ — стеклянный фон, тонкая золотая рамка, четыре уголка-
    ажуры, бегающий блик при ховере. Без жирных градиентов.
    ============================================================ */
+.menu-btn * {
+    position: static;
+}
+
 .menu-btn tw-link,
 .menu-btn .enchantment-link {
     font-weight: inherit;
     color: inherit;
     transition: inherit;
+}
+
+.menu-btn tw-link:before,
+.menu-btn .enchantment-link:before {
+    content: '';
+    position: absolute;
+    inset: -4px;
 }
 
 .menu-btn {
@@ -378,7 +395,7 @@
 
     font-family: var(--font-display);
     font-weight: 400;
-    font-size: 13px;
+    font-size: 16px;
     letter-spacing: .55em;
     text-transform: uppercase;
 
@@ -393,7 +410,8 @@
 }
 
 .menu-btn__label {
-    position: relative;
+    display: inline-flex;
+    padding-top: 4px;
     z-index: 2;
     text-shadow: 0 0 14px rgba(212, 166, 74, .55),
     0 1px 0 rgba(0, 0, 0, .4);
@@ -504,10 +522,10 @@
    ============================================================ */
 .menu-bg-near {
     --menu-bg-near: none;
-    --menu-near-opacity: .75;
+    --menu-near-opacity: .9;
     position: fixed;
     z-index: 5;
-    inset: -6%;
+    inset: -4%;
     pointer-events: none;
     background-color: transparent;
     background-image: var(--menu-bg-near);
@@ -640,6 +658,6 @@
     }
 
     .menu-bg-near {
-        --menu-near-opacity: .55;
+        --menu-near-opacity: .65;
     }
 }

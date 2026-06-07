@@ -37,10 +37,6 @@
         const target = ev.target.closest("[data-action]");
         if (!target) return;
         switch (target.dataset.action) {
-            case "play":
-                // основной игре нужна index.html
-                // location.href = "index.html";
-                break;
             case "credits":
                 setCredits(true);
                 break;

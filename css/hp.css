@@ -101,6 +101,16 @@
     display: flex;
     gap: 8px;
     padding: 2px 4px;
+    transition: opacity 380ms var(--ease-soft), transform 380ms var(--ease-soft), max-width 380ms var(--ease-soft);
+    max-width: 200px;
+    overflow: hidden;
+}
+.drops--hidden {
+    opacity: 0;
+    transform: translateX(8px);
+    max-width: 0;
+    padding: 0;
+    pointer-events: none;
 }
 .drop {
     width: 18px;

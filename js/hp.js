@@ -7,22 +7,29 @@
        hp.onZero(fn)
 
    drops.fill(idx) / drops.reset()
+   drops.show() / drops.hide() / drops.toggle()  — НЕЗАВИСИМО от hp.
+       Логика:
+         hp.hide()    → прячется весь блок (hp + капли).
+         drops.hide() → только капли. hp остаётся.
    ============================================================ */
 
 (function () {
     "use strict";
 
-    const STATE = { value: 100, max: 100, hidden: false, listeners: [] };
+    const STATE = { value: 100, max: 100, hidden: false, dropsHidden: false, listeners: [] };
 
     function stateBox() { return document.querySelector("[data-state]"); }
     function fillEl()   { return document.querySelector("[data-hp-fill]"); }
+    function dropsEl()  { return document.querySelector("[data-drops]"); }
 
     function clamp(v) { return Math.max(0, Math.min(STATE.max, v)); }
 
     function render() {
         const fill = fillEl();
         const box = stateBox();
-        if (box) box.classList.toggle("state--hidden", STATE.hidden);
+        const drops = dropsEl();
+        if (box)   box.classList.toggle("state--hidden", STATE.hidden);
+        if (drops) drops.classList.toggle("drops--hidden", STATE.dropsHidden);
 
         if (fill) {
             const pct = (STATE.value / STATE.max) * 100;
@@ -82,7 +89,12 @@
         },
     });
 
-    /* ---------- drops ---------- */
+    /* ---------- drops ----------
+       Видимость капель — НЕЗАВИСИМАЯ от hp. Это значит:
+         hp.hide()    прячет весь блок state (и hp, и капли).
+         drops.hide() прячет ТОЛЬКО капли, hp остаётся видимым.
+       Поэтому флаг живёт в общем STATE, а render() ставит
+       .drops--hidden на [data-drops] поверх state--hidden от hp. */
     function dropFill(idx) {
         const el = document.querySelector(`[data-drop-index="${idx}"]`);
         if (el) el.classList.add("is-filled");
@@ -91,8 +103,19 @@
         document.querySelectorAll("[data-drop-index]").forEach((el) =>
             el.classList.remove("is-filled"));
     }
+    function dropsShow() { STATE.dropsHidden = false; render(); }
+    function dropsHide() { STATE.dropsHidden = true;  render(); }
+    function dropsToggle(v) {
+        if (v === undefined) STATE.dropsHidden = !STATE.dropsHidden;
+        else STATE.dropsHidden = !v;
+        render();
+    }
     window.drops = Object.assign(window.drops || {}, {
-        fill:  dropFill,
-        reset: dropReset,
+        fill:   dropFill,
+        reset:  dropReset,
+        show:   dropsShow,
+        hide:   dropsHide,
+        toggle: dropsToggle,
+        hidden: () => STATE.dropsHidden,
     });
 })();
