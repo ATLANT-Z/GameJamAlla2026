@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Пожалуйста, пойдём со мной — Меню</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/menu.css">
+</head>
+<body>
+<div class="menu-page">
+
+    <!-- ============================================================
+         LOADER — виден пока window не догрузил CSS / JS / картинки.
+         menu.js снимет класс is-done и удалит ноду через 700мс.
+         ============================================================ -->
+    <div class="loader" data-loader>
+        <div class="loader__rune" aria-hidden="true"></div>
+        <div class="loader__label">загрузка</div>
+    </div>
+
+    <!-- ============================================================
+         FAR LAYER — фон. Болванка с подписью.
+         Подменишь background-image в .menu-bg-far на свою картинку
+         (рекомендую через CSS-переменную --menu-bg).
+         ============================================================ -->
+    <div class="menu-bg-far" data-parallax="6" data-menu-bg-far aria-hidden="true">
+        <img src="https://ik.imagekit.io/atlantz/jam/menu_bg.png" alt="bg">
+    </div>
+
+    <!-- Звёзды/светлячки — лёгкий параллакс. CSS-only twinkle. -->
+    <div class="menu-stars" data-parallax="10" aria-hidden="true"></div>
+
+    <!-- Виньетка поверх дальнего слоя — затемняет края. -->
+    <div class="menu-vignette" aria-hidden="true"></div>
+
+    <!-- ============================================================
+         CONTENT — логотип + название + кнопки.
+         Лежит ПО ЦЕНТРУ экрана, по Z — между дальним и ближним фоном.
+         ============================================================ -->
+    <main class="menu-content" data-parallax="9">
+        <div class="menu-logo" data-menu-logo aria-hidden="true">
+            <img src="https://ik.imagekit.io/atlantz/jam/logo2.png" alt="">
+        </div>
+
+        <h1 class="menu-title">
+            <span class="menu-title__line menu-title__line--top">
+                Illusion
+            </span>
+            <span class="menu-title__line menu-title__line--top line">Illusion</span>
+            <span class="menu-title__ornament" aria-hidden="true"></span>
+            <span class="menu-title__line menu-title__line--bot">Crown</span>
+            <span class="menu-title__line menu-title__line--bot line">Crown</span>
+        </h1>
+
+        <div class="menu-bg-near" data-parallax="22" data-menu-bg-near aria-hidden="true">
+            <img src="https://ik.imagekit.io/atlantz/jam/menu_near2.png" alt="bg">
+        </div>
+
+        <nav class="menu-nav" aria-label="Главное меню">
+            <span class="menu-btn" data-action="play">
+                <span class="menu-btn__corner menu-btn__corner--tl" aria-hidden="true"></span>
+                <span class="menu-btn__corner menu-btn__corner--tr" aria-hidden="true"></span>
+                <span class="menu-btn__corner menu-btn__corner--bl" aria-hidden="true"></span>
+                <span class="menu-btn__corner menu-btn__corner--br" aria-hidden="true"></span>
+                <!--твайн ссылка-->
+                <span class="menu-btn__label">[[Начать игру|Воспоминания]]</span>
+            </span>
+            <button type="button" class="menu-btn" data-action="credits">
+                <span class="menu-btn__corner menu-btn__corner--tl" aria-hidden="true"></span>
+                <span class="menu-btn__corner menu-btn__corner--tr" aria-hidden="true"></span>
+                <span class="menu-btn__corner menu-btn__corner--bl" aria-hidden="true"></span>
+                <span class="menu-btn__corner menu-btn__corner--br" aria-hidden="true"></span>
+                <span class="menu-btn__label">Титры</span>
+            </button>
+        </nav>
+    </main>
+
+    <!-- ============================================================
+         NEAR LAYER — ближний фон на ВЕСЬ экран. Лежит ПОВЕРХ контента,
+         полупрозрачный, параллакс больше дальнего. Меч и листья
+         автор кладёт прямо в эту картинку (PNG с прозрачностью).
+
+         Подменишь --menu-bg-near на свою:
+             .menu-bg-near { --menu-bg-near: url("img/menu_near.png"); }
+         Прозрачность регулируется --menu-near-opacity (по умолч. .75).
+         ============================================================ -->
+
+    <!-- ============================================================
+         CREDITS — оверлей. Открывается по клику "Титры".
+         Списки имён — болванки, дорисуй живых людей сам.
+         ============================================================ -->
+    <section class="credits" data-credits aria-hidden="true">
+        <div class="credits__panel">
+            <h2 class="credits__title">Титры</h2>
+
+            <div class="credits__group">
+                <div class="credits__group-title">Команда</div>
+                <div class="credits__row">
+                    <div class="credits__role">Идея и сценарий</div>
+                    <div class="credits__name">Имя Фамилия</div>
+                </div>
+                <div class="credits__row">
+                    <div class="credits__role">Программирование</div>
+                    <div class="credits__name">Имя Фамилия</div>
+                </div>
+                <div class="credits__row">
+                    <div class="credits__role">Арт</div>
+                    <div class="credits__name">Имя Фамилия</div>
+                </div>
+                <div class="credits__row">
+                    <div class="credits__role">Музыка</div>
+                    <div class="credits__name">Имя Фамилия</div>
+                </div>
+            </div>
+
+            <div class="credits__group">
+                <div class="credits__group-title">Наставники</div>
+                <div class="credits__row">
+                    <div class="credits__role">Менторство</div>
+                    <div class="credits__name">Имя Фамилия</div>
+                </div>
+                <div class="credits__row">
+                    <div class="credits__role">Менторство</div>
+                    <div class="credits__name">Имя Фамилия</div>
+                </div>
+            </div>
+
+            <div class="credits__footer">
+                <button type="button" class="menu-btn menu-btn--small" data-action="credits-back">
+                    <span class="menu-btn__label">← Назад</span>
+                </button>
+            </div>
+        </div>
+    </section>
+</div>
+<!-- ============================================================
+     SCRIPTS — только параллакс (уже из игры) + лёгкий menu.js.
+     Никакого parsера / Twine / реестра. Эта страница — статика.
+     ============================================================ -->
+<script src="js/parallax.js"></script>
+<script src="js/menu.js"></script>
+</body>
+</html>

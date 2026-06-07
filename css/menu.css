@@ -1,0 +1,645 @@
+/* ============================================================
+   menu.css — главная страница (menu.html).
+   Двухслойный параллакс-сцены: bg-far → content → bg-near (меч).
+   Палитра — из base.css (--c-night-*, --c-gold-*, --c-arcane).
+   Меню оверлей-стат-страница. Никакого парсера.
+   ============================================================ */
+
+.menu-page {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    background: radial-gradient(ellipse at 50% 100%, var(--c-night-3), var(--c-night-0) 75%);
+}
+
+/* ============================================================
+   LOADER — пока window.load не дострелит
+   ============================================================ */
+.loader {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: grid;
+    place-items: center;
+    grid-auto-flow: row;
+    gap: 22px;
+    background: radial-gradient(ellipse at center,
+    var(--c-night-1) 0%, var(--c-night-0) 80%);
+    transition: opacity 600ms var(--ease-soft);
+}
+
+.loader.is-done {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.loader__rune {
+    position: relative;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    border: 1px solid var(--line-gold);
+    border-right-color: transparent;
+    border-bottom-color: transparent;
+    box-shadow: var(--glow-gold);
+    animation: loader-spin 1.4s linear infinite;
+}
+
+.loader__rune::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--c-gold-0);
+    box-shadow: 0 0 14px var(--c-gold-1), 0 0 4px #fff;
+    animation: rune-breathe 1.6s var(--ease-soft) infinite;
+}
+
+@keyframes rune-breathe {
+    0%, 100% {
+        opacity: .55;
+        transform: translate(-50%, -50%) scale(1);
+    }
+    50% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1.03);
+    }
+}
+
+.loader__label {
+    font-family: var(--font-display);
+    font-size: 18px;
+    letter-spacing: .5em;
+    text-transform: lowercase;
+    color: var(--c-text-dim);
+    text-shadow: 0 0 14px rgba(184, 162, 255, .25);
+}
+
+@keyframes loader-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* ============================================================
+   FAR LAYER — фон. Заменишь --menu-bg на свою картинку:
+       .menu-bg-far { --menu-bg: url("img/menu_far.png"); }
+   ============================================================ */
+.menu-bg-far {
+    --menu-bg: none;
+    position: fixed;
+    z-index: 1;
+    /* выпускаем за края на параллакс-«люфт» */
+    inset: -6%;
+    background-color: var(--c-night-1);
+    background-image: var(--menu-bg);
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    image-rendering: pixelated;
+    transform: translate(var(--px, 0), var(--py, 0));
+}
+
+.menu-bg-far img,
+.menu-bg-near img,
+.menu-logo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.menu-bg-placeholder {
+    position: absolute;
+    inset: 6vh 6vw;
+    display: grid;
+    place-items: center;
+    color: rgba(207, 226, 255, .22);
+    font-family: var(--font-display);
+    font-size: 12px;
+    letter-spacing: .4em;
+    text-transform: lowercase;
+    border: 1px dashed rgba(207, 226, 255, .1);
+    border-radius: 4px;
+}
+
+/* ============================================================
+   STARS — деликатный твинкл поверх фона
+   ============================================================ */
+.menu-stars {
+    position: fixed;
+    z-index: 2;
+    inset: -3%;
+    pointer-events: none;
+    transform: translate(var(--px, 0), var(--py, 0));
+    background: radial-gradient(1px 1px at 12% 22%, var(--c-gold-0) 0, transparent 100%),
+    radial-gradient(1px 1px at 24% 68%, var(--c-arcane) 0, transparent 100%),
+    radial-gradient(1px 1px at 36% 14%, var(--c-moon-2) 0, transparent 100%),
+    radial-gradient(1px 1px at 78% 30%, var(--c-gold-1) 0, transparent 100%),
+    radial-gradient(1px 1px at 88% 76%, var(--c-moon-3) 0, transparent 100%),
+    radial-gradient(1px 1px at 54% 88%, var(--c-arcane) 0, transparent 100%),
+    radial-gradient(1px 1px at 64% 44%, var(--c-gold-0) 0, transparent 100%),
+    radial-gradient(2px 2px at 18% 82%, rgba(255, 242, 193, .9) 0, transparent 100%),
+    radial-gradient(2px 2px at 92% 18%, rgba(184, 162, 255, .9) 0, transparent 100%);
+    animation: stars-twinkle 5.2s var(--ease-soft) infinite;
+}
+
+@keyframes stars-twinkle {
+    0%, 100% {
+        opacity: .55;
+    }
+    50% {
+        opacity: 1;
+    }
+}
+
+/* ============================================================
+   VIGNETTE — лёгкое затемнение краёв
+   ============================================================ */
+.menu-vignette {
+    position: fixed;
+    z-index: 3;
+    inset: 0;
+    pointer-events: none;
+    background: radial-gradient(ellipse at center,
+    transparent 30%, rgba(3, 5, 15, .55) 100%),
+    linear-gradient(180deg,
+            rgba(3, 5, 15, .25) 0%, transparent 25%,
+            transparent 75%, rgba(3, 5, 15, .45) 100%);
+}
+
+/* ============================================================
+   CONTENT — лого, название, кнопки. По центру экрана.
+   Z=4: над дальним фоном и звёздами, ПОД полупрозрачным ближним слоем.
+   ============================================================ */
+.menu-content {
+    position: fixed;
+    z-index: 4;
+    inset: 0;
+    transform: var(--content-base) translate(var(--px, 0), var(--py, 0));
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 32px;
+    text-align: center;
+}
+
+.menu-logo {
+    width: 150px;
+    height: 96px;
+    /*border: 1px solid var(--line-gold);*/
+    border-radius: 8px;
+    /*background: linear-gradient(180deg,*/
+    /*rgba(18, 26, 64, .85),*/
+    /*rgba(10, 18, 48, .9));*/
+    /*box-shadow: var(--sheen-inner),*/
+    /*var(--glow-gold),*/
+    /*0 8px 18px rgba(0, 0, 0, .55);*/
+    display: grid;
+    place-items: center;
+    image-rendering: pixelated;
+
+    z-index: 99;
+}
+
+.menu-logo__placeholder {
+    color: rgba(255, 242, 193, .45);
+    font-family: var(--font-display);
+    font-size: 10px;
+    letter-spacing: .3em;
+    text-transform: lowercase;
+}
+
+/* ============================================================
+   TITLE — переливающееся золото, изящная гарнитура
+   Тонкий шрифт + просторные трекинги + хайрлайн с ромбиком между
+   строк. Никакой 900-веса (слишком «топорно»).
+   ============================================================ */
+.menu-title {
+    position: relative;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+}
+
+.menu-title__line.line {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 999;
+    color: transparent;
+    /*text-shadow: 0 0 2px rgba(255, 255, 255, 1);*/
+
+    animation: none;
+    background-image: none;
+    /* Задаем обводку: толщина и цвет */
+    -webkit-text-stroke: 1px rgba(255, 255, 255, .5);
+}
+
+.menu-title__line--top.line {
+    top: 0;
+}
+.menu-title__line--bot.line {
+    bottom: 0;
+}
+
+.menu-title__line {
+    display: inline-block;
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-style: italic;
+    line-height: 1;
+    background-image: linear-gradient(100deg,
+    #8a6c2e 0%,
+    #d4a64a 22%,
+    #fff2c1 44%,
+    #f0d574 56%,
+    #d4a64a 78%,
+    #8a6c2e 100%);
+    background-size: 220% 100%;
+    background-position: 0% center;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    filter: drop-shadow(0 1px 0 rgba(0, 0, 0, .35)) drop-shadow(0 0 22px rgba(212, 166, 74, .28));
+    animation: title-shimmer 14s ease-in-out infinite;
+}
+
+.menu-title__line--top {
+    font-size: clamp(48px, 15vw, 100px);
+    letter-spacing: .12em;
+}
+
+.menu-title__line--bot {
+    font-size: clamp(64px, 20vw, 160px);
+    letter-spacing: .06em;
+}
+
+/* Хайрлайн-разделитель с золотым ромбиком в центре. */
+.menu-title__ornament {
+    position: relative;
+    display: block;
+    width: clamp(180px, 26vw, 320px);
+    height: 1px;
+    background: linear-gradient(90deg,
+    transparent 0%,
+    rgba(212, 166, 74, .55) 30%,
+    rgba(255, 242, 193, .85) 50%,
+    rgba(212, 166, 74, .55) 70%,
+    transparent 100%);
+    z-index: 999;
+    opacity: 0.9;
+}
+
+.menu-title__ornament::before,
+.menu-title__ornament::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 7px;
+    height: 7px;
+    background: var(--c-gold-1);
+    box-shadow: 0 0 12px rgba(255, 242, 193, .8),
+    0 0 4px var(--c-gold-0);
+    opacity: 0.75;
+}
+
+.menu-title__ornament::before {
+    transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.menu-title__ornament::after {
+    width: 3px;
+    height: 3px;
+    background: #fff;
+    transform: translate(-50%, -50%) rotate(45deg);
+    box-shadow: 0 0 6px #fff;
+}
+
+@keyframes title-shimmer {
+    0% {
+        background-position: 0% center;
+    }
+    50% {
+        background-position: 200% center;
+    }
+    100% {
+        background-position: 0% center;
+    }
+}
+
+/* ============================================================
+   NAV BUTTONS
+   ============================================================ */
+.menu-nav {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    margin-top: 18px;
+    z-index: 999;
+}
+
+/* ============================================================
+   КНОПКИ — стеклянный фон, тонкая золотая рамка, четыре уголка-
+   ажуры, бегающий блик при ховере. Без жирных градиентов.
+   ============================================================ */
+.menu-btn tw-link,
+.menu-btn .enchantment-link {
+    font-weight: inherit;
+    color: inherit;
+    transition: inherit;
+}
+
+.menu-btn {
+    appearance: none;
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+
+    width: 320px;
+    padding: 18px 32px;
+    text-align: center;
+
+    border: 1px solid rgba(212, 166, 74, .55);
+    background: linear-gradient(180deg,
+    rgba(10, 14, 36, .55),
+    rgba(6, 10, 28, .65));
+    -webkit-backdrop-filter: blur(2px);
+    backdrop-filter: blur(2px);
+    color: var(--c-gold-0);
+
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: 13px;
+    letter-spacing: .55em;
+    text-transform: uppercase;
+
+    box-shadow: var(--sheen-inner),
+    var(--glow-gold);
+
+    transition: transform 320ms var(--ease-soft),
+    color 220ms var(--ease-soft),
+    border-color 240ms var(--ease-soft),
+    box-shadow 320ms var(--ease-soft),
+    letter-spacing 320ms var(--ease-soft);
+}
+
+.menu-btn__label {
+    position: relative;
+    z-index: 2;
+    text-shadow: 0 0 14px rgba(212, 166, 74, .55),
+    0 1px 0 rgba(0, 0, 0, .4);
+}
+
+/* Четыре золотых уголка — рисуем «декоративную рамку»
+   из двух тонких линий в каждом углу. */
+.menu-btn__corner {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    pointer-events: none;
+    z-index: 2;
+    transition: width 260ms var(--ease-soft), height 260ms var(--ease-soft);
+}
+
+.menu-btn__corner--tl {
+    top: 4px;
+    left: 4px;
+    border-top: 1px solid var(--c-gold-1);
+    border-left: 1px solid var(--c-gold-1);
+}
+
+.menu-btn__corner--tr {
+    top: 4px;
+    right: 4px;
+    border-top: 1px solid var(--c-gold-1);
+    border-right: 1px solid var(--c-gold-1);
+}
+
+.menu-btn__corner--bl {
+    bottom: 4px;
+    left: 4px;
+    border-bottom: 1px solid var(--c-gold-1);
+    border-left: 1px solid var(--c-gold-1);
+}
+
+.menu-btn__corner--br {
+    bottom: 4px;
+    right: 4px;
+    border-bottom: 1px solid var(--c-gold-1);
+    border-right: 1px solid var(--c-gold-1);
+}
+
+/* Бегающий блик */
+.menu-btn::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(110deg,
+    transparent 30%,
+    rgba(255, 242, 193, .22) 50%,
+    transparent 70%);
+    transform: translateX(-130%);
+    transition: transform 900ms var(--ease-soft);
+    pointer-events: none;
+    z-index: 1;
+}
+
+.menu-btn:hover {
+    color: #fff;
+    border-color: var(--line-gold-strong);
+    letter-spacing: .6em;
+    box-shadow: var(--sheen-inner),
+    var(--glow-gold-strong),
+    0 8px 22px rgba(0, 0, 0, .55);
+    transform: translateY(-1px);
+}
+
+.menu-btn:hover::before {
+    transform: translateX(130%);
+}
+
+.menu-btn:hover .menu-btn__corner {
+    width: 16px;
+    height: 16px;
+}
+
+.menu-btn:active {
+    transform: translateY(0) scale(.99);
+}
+
+.menu-btn:focus-visible {
+    outline: none;
+    border-color: var(--line-gold-strong);
+    box-shadow: var(--sheen-inner),
+    var(--glow-gold-strong),
+    0 0 0 2px rgba(255, 242, 193, .35);
+}
+
+.menu-btn--small {
+    width: auto;
+    padding: 12px 28px;
+    font-size: 11px;
+    letter-spacing: .4em;
+}
+
+/* ============================================================
+   NEAR LAYER — ближний фон на ВЕСЬ экран. Лежит ПОВЕРХ контента,
+   полупрозрачный (--menu-near-opacity), параллакс сильнее
+   дальнего. Меч / листья / виньетка — автор кладёт их прямо
+   в эту картинку (PNG с прозрачностью).
+
+   Подмена картинки:
+       .menu-bg-near { --menu-bg-near: url("img/menu_near.png"); }
+   Прозрачность всего слоя:
+       .menu-bg-near { --menu-near-opacity: .7; }
+   ============================================================ */
+.menu-bg-near {
+    --menu-bg-near: none;
+    --menu-near-opacity: .75;
+    position: fixed;
+    z-index: 5;
+    inset: -6%;
+    pointer-events: none;
+    background-color: transparent;
+    background-image: var(--menu-bg-near);
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    image-rendering: pixelated;
+    opacity: var(--menu-near-opacity);
+    transform: translate(var(--px, 0), var(--py, 0));
+}
+
+.menu-bg-placeholder--near {
+    color: rgba(212, 166, 74, .4);
+    border-color: rgba(212, 166, 74, .18);
+}
+
+/* ============================================================
+   CREDITS — оверлей
+   ============================================================ */
+.credits {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    display: grid;
+    place-items: center;
+    padding: 6vh 6vw;
+    background: radial-gradient(ellipse at 50% 110%,
+    rgba(20, 32, 74, .96), rgba(3, 5, 15, .98));
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 380ms var(--ease-soft);
+}
+
+.credits.is-visible {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.credits__panel {
+    width: 100%;
+    max-width: 680px;
+    max-height: 88vh;
+    overflow-y: auto;
+    padding: 40px clamp(24px, 5vw, 48px);
+    border: 1px solid var(--line-gold);
+    background: linear-gradient(180deg,
+    rgba(18, 26, 64, .94),
+    rgba(10, 18, 48, .97));
+    box-shadow: var(--sheen-inner),
+    var(--glow-gold),
+    0 24px 60px rgba(0, 0, 0, .65);
+    transform: translateY(14px);
+    transition: transform 420ms var(--ease-spring);
+}
+
+.credits.is-visible .credits__panel {
+    transform: translateY(0);
+}
+
+.credits__title {
+    margin: 0 0 32px;
+    font-family: var(--font-display);
+    font-weight: 900;
+    font-size: clamp(26px, 3.4vw, 38px);
+    letter-spacing: .35em;
+    text-transform: uppercase;
+    text-align: center;
+    color: var(--c-gold-0);
+    text-shadow: 0 0 14px rgba(212, 166, 74, .55),
+    0 2px 0 rgba(0, 0, 0, .35);
+}
+
+.credits__group {
+    margin-bottom: 28px;
+}
+
+.credits__group-title {
+    font-family: var(--font-display);
+    font-size: 11px;
+    letter-spacing: .4em;
+    text-transform: uppercase;
+    color: var(--c-text-dim);
+    margin-bottom: 10px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid rgba(212, 166, 74, .25);
+}
+
+.credits__row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    align-items: baseline;
+    padding: 8px 0;
+}
+
+.credits__role {
+    font-family: var(--font-display);
+    font-size: 11px;
+    letter-spacing: .25em;
+    text-transform: uppercase;
+    color: var(--c-text-dim);
+    text-align: right;
+}
+
+.credits__name {
+    font-family: var(--font-heading);
+    font-size: 17px;
+    color: var(--c-gold-0);
+    text-shadow: 0 0 12px rgba(212, 166, 74, .35);
+}
+
+.credits__footer {
+    display: flex;
+    justify-content: center;
+    margin-top: 32px;
+}
+
+/* ============================================================
+   MOBILE — кнопки шире, заголовок и контент компактнее, ближний
+   слой ещё прозрачнее (чтоб не задавил мелкий экран).
+   ============================================================ */
+@media (max-width: 720px) {
+    .menu-content {
+        width: calc(100vw - 32px);
+        gap: 24px;
+    }
+
+    .menu-btn {
+        width: 100%;
+    }
+
+    .menu-bg-near {
+        --menu-near-opacity: .55;
+    }
+}
