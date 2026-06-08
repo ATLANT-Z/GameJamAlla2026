@@ -771,6 +771,7 @@
    ============================================================ */
 @media (max-width: 720px) {
     .menu-content {
+        margin: auto;
         width: calc(100vw - 32px);
         gap: 24px;
     }
@@ -782,4 +783,179 @@
     .menu-bg-near {
         --menu-near-opacity: .65;
     }
+}
+
+/* ============================================================
+   PORTRAIT PHONE — узкая ширина, высота не лимит. Контент
+   ужимаем по ширине, но оставляем «театральные» крупные шрифты.
+   Кнопки в столбик, на всю ширину.
+   ============================================================ */
+@media (orientation: portrait) and (max-width: 540px) {
+    .menu-content {
+        gap: 18px;
+        padding: 0 16px;
+    }
+
+    .menu-logo {
+        width: 110px;
+        height: 72px;
+    }
+
+    .menu-title {
+        gap: 10px;
+    }
+    .menu-title__line--top {
+        font-size: clamp(32px, 9vw, 56px);
+        letter-spacing: .1em;
+    }
+    .menu-title__line--bot {
+        font-size: clamp(46px, 14vw, 86px);
+        letter-spacing: .04em;
+    }
+    .menu-title__ornament {
+        width: clamp(140px, 36vw, 220px);
+    }
+
+    .menu-nav {
+        gap: 12px;
+        margin-top: 10px;
+        width: 100%;
+        max-width: 320px;
+    }
+
+    .menu-btn {
+        width: 100%;
+        padding: 14px 22px;
+        font-size: 13px;
+        letter-spacing: .42em;
+    }
+
+    /* CREDITS portrait — ширина в притык, шрифты средние */
+    .credits { padding: 4vh 4vw; }
+    .credits__panel {
+        max-height: 90vh;
+        padding: 24px 18px;
+    }
+    .credits__title {
+        margin: 0 0 20px;
+        font-size: 22px;
+        letter-spacing: .3em;
+    }
+    .credits__row {
+        grid-template-columns: 1fr;
+        gap: 4px;
+        padding: 8px 0;
+    }
+    .credits__role {
+        text-align: left;
+        font-size: 10px;
+        letter-spacing: .22em;
+    }
+    .credits__name { font-size: 16px; }
+    .credits__handles {
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+    }
+    .credits__handle { padding: 10px 12px; }
+    .credits__handle-name { font-size: 14px; }
+    .credits__handle-tag  { font-size: 12px; }
+}
+
+/* ============================================================
+   LANDSCAPE PHONE — игра играется горизонтально, у меню тот же
+   контекст. Главный лимит — ВЫСОТА (~360–430px), а не ширина:
+   нужно ужать всё по вертикали так, чтобы лого + заголовок +
+   три кнопки влезли БЕЗ скролла. Шрифты уменьшаем агрессивно,
+   gap режем, лого мельче.
+   ============================================================ */
+@media (max-height: 500px) {
+    .menu-content {
+        gap: 10px;
+        padding: 8px 0;
+    }
+
+    .menu-logo {
+        width: 78px;
+        height: 50px;
+    }
+
+    .menu-title {
+        gap: 6px;
+    }
+    .menu-title__line--top {
+        font-size: clamp(24px, 5.5vh, 38px);
+        letter-spacing: .1em;
+    }
+    .menu-title__line--bot {
+        font-size: clamp(34px, 8vh, 56px);
+        letter-spacing: .05em;
+    }
+    .menu-title__ornament {
+        width: clamp(120px, 22vw, 200px);
+    }
+
+    .menu-nav {
+        gap: 8px;
+        margin-top: 4px;
+        flex-direction: row;          /* кнопки в ряд — высота важнее ширины */
+        flex-wrap: wrap;
+        justify-content: center;
+        max-width: min(720px, 92vw);
+    }
+
+    .menu-btn {
+        width: auto;
+        min-width: 0;
+        padding: 9px 18px;
+        font-size: 11px;
+        letter-spacing: .35em;
+    }
+    .menu-btn__label {
+        padding-top: 2px;
+    }
+
+    /* Лоадер — мельче, без жирного letter-spacing-а */
+    .loader { gap: 12px; }
+    .loader__rune { width: 36px; height: 36px; }
+    .loader__label { font-size: 12px; letter-spacing: .35em; }
+
+    /* Виньетка чуть слабее, чтоб не съедала маленький кадр */
+    .menu-vignette {
+        background: radial-gradient(ellipse at center,
+            transparent 35%, rgba(3, 5, 15, .45) 100%);
+    }
+
+    /* CREDITS — панель почти на весь экран, скролл внутри */
+    .credits { padding: 4vh 4vw; }
+    .credits__panel {
+        max-height: 92vh;
+        padding: 18px 22px;
+    }
+    .credits__title {
+        margin: 0 0 14px;
+        font-size: 18px;
+        letter-spacing: .25em;
+    }
+    .credits__group { margin-bottom: 14px; }
+    .credits__group-title {
+        font-size: 10px;
+        margin-bottom: 6px;
+        padding-bottom: 4px;
+    }
+    .credits__row {
+        grid-template-columns: 120px 1fr;
+        gap: 14px;
+        padding: 4px 0;
+    }
+    .credits__role { font-size: 10px; letter-spacing: .2em; }
+    .credits__name { font-size: 14px; }
+    .credits__row--inline .credits__name { font-size: 15px; }
+    .credits__handles {
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 6px;
+    }
+    .credits__handle { padding: 7px 10px; }
+    .credits__handle-name { font-size: 13px; }
+    .credits__handle-tag  { font-size: 11px; }
+    .credits__footer { margin-top: 14px; }
 }

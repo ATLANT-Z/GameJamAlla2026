@@ -415,3 +415,120 @@
 .choice.is-leaving {
     animation: choice-fade-out 220ms var(--ease-soft) forwards;
 }
+
+/* ============================================================
+   PORTRAIT PHONE — высота ОК, ширина лимит. Шрифт средний,
+   padding скромнее, кнопки выбора во всю ширину.
+   ============================================================ */
+@media (orientation: portrait) and (max-width: 600px) {
+    .dialog {
+        padding: 16px 18px 18px;
+        min-height: 0;
+        border-radius: 10px;
+    }
+    .dialog::before {
+        inset: -14px;
+        border-radius: 18px;
+        filter: blur(14px);
+    }
+    .dialog__corner {
+        --margin: -12px;
+        width: 28px;
+        height: 28px;
+    }
+    .dialog__speaker {
+        font-size: 10px;
+        letter-spacing: .26em;
+        padding: 6px 12px;
+    }
+    .dialog__speaker::before,
+    .dialog__speaker::after { width: 14px; }
+    .dialog__speaker::before { left: -18px; }
+    .dialog__speaker::after  { right: -18px; }
+
+    .dialog__text {
+        font-size: 17px;
+        line-height: 1.45;
+        min-height: 3em;
+    }
+
+    .dialog__hint {
+        font-size: 12px;
+        right: 12px;
+        bottom: 7px;
+    }
+
+    /* Кнопки выбора — растягиваем на всю ширину футера */
+    .choice {
+        width: 100%;
+        font-size: 13px;
+        letter-spacing: .14em;
+        padding: 10px 18px;
+    }
+}
+
+/* ============================================================
+   LANDSCAPE PHONE — игра играется горизонтально на телефоне,
+   высота вьюпорта ~360–430px. Диалог занимает ~40% низа, надо
+   ему сильно ужать вертикальные размеры и шрифт.
+   ============================================================ */
+@media (max-height: 500px) {
+    .dialog {
+        padding: 12px 18px 14px;
+        min-height: 0;
+        border-radius: 8px;
+    }
+    .dialog::before {
+        inset: -10px;
+        border-radius: 14px;
+        filter: blur(12px);
+    }
+
+    /* Уголки-филигрань — мельче и ближе к рамке (на маленьком
+       кадре оригинальные 38×38 выглядели слишком декоративно). */
+    .dialog__corner {
+        --margin: -10px;
+        width: 22px;
+        height: 22px;
+    }
+
+    /* Спикер-табличка над карточкой — компактнее и ближе */
+    .dialog__speaker {
+        font-size: 10px;
+        letter-spacing: .22em;
+        padding: 5px 10px;
+        transform: translate(-50%, 35%);
+    }
+    .dialog__speaker::before,
+    .dialog__speaker::after { width: 12px; }
+    .dialog__speaker::before { left: -16px; }
+    .dialog__speaker::after  { right: -16px; }
+
+    /* Текст реплики — основной выигрыш по вертикали */
+    .dialog__text {
+        font-size: 15px;
+        line-height: 1.4;
+        min-height: 2.6em;
+    }
+
+    .dialog__hint {
+        font-size: 11px;
+        right: 10px;
+        bottom: 6px;
+    }
+
+    /* Кнопки выбора — в одну/две строки, мелкий шрифт */
+    .choice {
+        font-size: 11px;
+        letter-spacing: .12em;
+        padding: 7px 16px;
+    }
+    .choice:hover,
+    .choice:focus-visible {
+        letter-spacing: .14em;
+    }
+    .choice::before,
+    .choice::after { width: 6px; height: 6px; }
+    .choice::before { left: -3px; }
+    .choice::after  { right: -3px; }
+}

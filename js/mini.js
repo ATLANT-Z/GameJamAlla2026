@@ -496,11 +496,28 @@
 
         showReaction(choice.reaction || "");
 
-        // onSwipe(state) → "cardId" | null — заказать следующую карту вне очереди.
+        // onSwipe(state) → возможные возвраты:
+        //   "cardId"          — заказать конкретную карту следующей
+        //   "end" | false     — досрочно закончить мини-игру
+        //   { end: true }     — то же самое, объектом
+        //   { nextId: "id" }  — то же что и строка-id, но явно
+        //   undefined | null  — обычное продолжение колоды
+        let endRequested = choice.end === true;
         if (typeof choice.onSwipe === "function") {
             try {
-                const next = choice.onSwipe(snapshotState());
-                STATE.pendingNextId = (typeof next === "string" && next) ? next : null;
+                const ret = choice.onSwipe(snapshotState());
+                if (ret === false || ret === "end") {
+                    endRequested = true;
+                } else if (ret && typeof ret === "object") {
+                    if (ret.end === true) endRequested = true;
+                    if (typeof ret.nextId === "string" && ret.nextId) {
+                        STATE.pendingNextId = ret.nextId;
+                    }
+                } else if (typeof ret === "string" && ret) {
+                    STATE.pendingNextId = ret;
+                } else {
+                    STATE.pendingNextId = null;
+                }
             } catch (e) {
                 console.error("[mini] onSwipe бросил исключение:", e);
                 STATE.pendingNextId = null;
@@ -511,6 +528,14 @@
         STATE.dealTimer = setTimeout(() => {
             STATE.dealTimer = 0;
             if (!STATE.running) return;
+            if (endRequested) {
+                // Per-config callback — как при штатном завершении колоды.
+                if (STATE.config && typeof STATE.config.onComplete === "function") {
+                    try { STATE.config.onComplete(); } catch (e) { console.error(e); }
+                }
+                stop("ended");
+                return;
+            }
             dealNext();
         }, 720);
     }

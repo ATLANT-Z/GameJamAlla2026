@@ -134,3 +134,60 @@
     60%  { transform: scale(1.18) rotate(4deg); opacity: 1; }
     100% { transform: scale(1)   rotate(0);    opacity: 1; }
 }
+
+/* ============================================================
+   PORTRAIT PHONE — слегка ужать, но не до полоски-нитки
+   ============================================================ */
+@media (orientation: portrait) and (max-width: 600px) {
+    .hp {
+        height: 16px;
+        padding: 4px 12px;
+    }
+    .hp__label {
+        font-size: 9px;
+        letter-spacing: .28em;
+        padding: 3px 7px;
+        top: -14px;
+    }
+    .hp__track {
+        height: 5px;
+    }
+
+    .drops {
+        gap: 6px;
+        max-width: 170px;
+    }
+    .drop {
+        width: 16px;
+        height: 20px;
+    }
+}
+
+/* ============================================================
+   LANDSCAPE PHONE
+   ============================================================ */
+@media (max-height: 500px) {
+    .hp {
+        height: 14px;
+        padding: 3px 10px;
+    }
+    .hp__label {
+        font-size: 8px;
+        letter-spacing: .25em;
+        padding: 2px 6px;
+        top: -12px;
+    }
+    .hp__track {
+        height: 4px;
+    }
+
+    .drops {
+        gap: 5px;
+        padding: 1px 2px;
+        max-width: 140px;
+    }
+    .drop {
+        width: 13px;
+        height: 16px;
+    }
+}

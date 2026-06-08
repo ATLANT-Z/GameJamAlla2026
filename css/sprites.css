@@ -54,6 +54,12 @@
     transition: --gg-opacity 600ms var(--ease-soft);
 }
 
+@media (max-width: 700px) {
+    .cast__gg {
+        width: 42vw;
+    }
+}
+
 .sprite {
     position: absolute;
     inset: 0;

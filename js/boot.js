@@ -272,7 +272,7 @@
             },
             s_wind_grass: {
                 src: "https://mcdn.podbean.com/mf/web/z58cyajifzcskc2c/s_wind_grass.mp3",
-                volume: 0.4,
+                volume: 0.55,
                 loop: true
             },
             sTroll: {src: "https://mcdn.podbean.com/mf/web/zyrm7tabcqad6uhs/s_troll.mp3", volume: 0.5},
@@ -616,6 +616,7 @@
                             "кого потеряла, поэтому я не могу доверить тебе каплю жизни. ",
                         outcome: {
                             label: 'Далее',
+                            end: true,
                         },
                     },
                     {
@@ -627,7 +628,7 @@
                             label: 'Далее',
                             onSwipe: (state) => {
                                 window.drops.fill("0")
-                                return true
+                                return false
                             },
                         },
                     },
@@ -813,6 +814,7 @@
                             "не менее важна, чем собственная.",
                         outcome: {
                             label: 'Далее',
+                            end: true,
                         },
                     },
                     {
@@ -826,7 +828,7 @@
                             label: 'Далее',
                             onSwipe: (state) => {
                                 window.drops.fill("1")
-                                return true
+                                return false
                             },
                         },
                     },
@@ -1006,6 +1008,7 @@
                             "каплю жизни в этот раз. Она предназначена тому, кто способен честно взглянуть на себя.",
                         outcome: {
                             label: 'Далее',
+                            end: true,
                         },
                     },
                     {
@@ -1018,7 +1021,7 @@
                             label: 'Далее',
                             onSwipe: (state) => {
                                 window.drops.fill("2")
-                                return true
+                                return false
                             },
                         },
                     },
