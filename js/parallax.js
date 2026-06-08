@@ -126,8 +126,11 @@
     }
 
     function tick(now) {
-        // Idle decay: если давно не было ввода, плавно возвращаем target к (0,0)
-        if (now - lastInputTs > IDLE_DECAY_MS) {
+        // Idle decay — ТОЛЬКО на touch-устройствах. На десктопе курсор
+        // всегда висит где-то на экране, поэтому «возврат в центр» там
+        // выглядит как самопроизвольное движение фона. На мобилке палец
+        // отрывается → надо плавно вернуть параллакс к (0,0).
+        if (isTouch && now - lastInputTs > IDLE_DECAY_MS) {
             target.x *= 0.92;
             target.y *= 0.92;
             if (Math.abs(target.x) < 0.001) target.x = 0;
